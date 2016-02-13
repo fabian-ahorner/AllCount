@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">AllCount</string>
+    <string name="action_settings">Settings</string>
+    <string name="start_recording">Start Recording</string>
+    <string name="stop_recording">Stop recording</string>
+    <string name="count">Count</string>
+    <string name="stop_counting">Stop counting</string>
+    <string name="get_ready">Get ready</string>
+    <string name="recording">Recording</string>
+    <string name="counting">Counting</string>
+    <string name="record_delay">Record delay</string>
+    <string name="record_duration">Record duration</string>
+</resources>
