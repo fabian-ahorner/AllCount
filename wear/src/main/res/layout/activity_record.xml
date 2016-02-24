@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:picker="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:animateLayoutChanges="true"
+    android:background="#212121"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context="com.bitflake.allcount.RecordCountActivity">
+
+    <LinearLayout
+        android:id="@+id/recordSettings"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/fab"
+        android:background="#212121"
+        android:elevation="2dip"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:outlineProvider="bounds">
+
+        <!--picker:dividerSize="64dip"-->
+        <com.bitflake.counter.HorizontalPicker
+            android:id="@+id/pickerDelay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/textColour"
+            android:textSize="28sp"
+            picker:sideItems="1"
+            picker:values="@array/record_delays" />
+        <!--picker:dividerSize="@dimen/itemPadding"-->
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dip"
+            android:gravity="center"
+            android:text="@string/record_delay"
+            android:textColor="#FFF"
+            android:textSize="16sp" />
+
+        <!--picker:dividerSize="64dip"-->
+        <com.bitflake.counter.HorizontalPicker
+            android:id="@+id/pickerDuration"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/textColour"
+            android:textSize="28sp"
+            picker:sideItems="1"
+            picker:values="@array/record_durations" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/record_duration"
+            android:textColor="#FFF"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+
+
+
+    <TextView
+        android:id="@+id/tMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/fab"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:gravity="center"
+        android:textColor="@color/textColour"
+        android:textSize="30sp"
+        android:visibility="invisible"
+        tools:text="Get ready" />
+
+    <View
+        android:id="@+id/progress"
+        android:layout_width="match_parent"
+        android:layout_height="32dip"
+        android:layout_alignParentBottom="true"
+        android:background="@color/colorPrimary" />
+
+    <!--<LinearLayout-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="match_parent"-->
+    <!--android:layout_alignParentBottom="true"-->
+    <!--android:layout_alignTop="@+id/fab"-->
+    <!--android:orientation="vertical">-->
+
+    <!--<View-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="0dip"-->
+    <!--android:layout_weight="1"-->
+    <!--android:background="@color/colorPrimary" />-->
+
+    <!--<ProgressBar-->
+    <!--android:id="@+id/pCountProgress"-->
+    <!--style="?android:attr/progressBarStyleHorizontal"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content" />-->
+
+    <!--<View-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="0dip"-->
+    <!--android:layout_weight="1" />-->
+    <!--</LinearLayout>-->
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="bottom|end"
+        android:layout_marginBottom="16dip"
+        android:src="@android:drawable/ic_media_play" />
+
+    <ImageButton
+        android:id="@+id/reset"
+        android:layout_width="64dip"
+        android:layout_height="64dip"
+        android:layout_alignTop="@+id/fab"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_toLeftOf="@+id/fab"
+        android:background="?android:selectableItemBackground"
+        android:src="@android:drawable/ic_menu_revert"
+        android:visibility="invisible" />
+
+    <ImageButton
+        android:id="@+id/skip"
+        android:layout_width="64dip"
+        android:layout_height="64dip"
+        android:layout_alignTop="@+id/fab"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_gravity="bottom|end"
+        android:layout_toRightOf="@+id/fab"
+        android:background="?android:selectableItemBackground"
+        android:src="@android:drawable/ic_media_next"
+        android:visibility="invisible" />
+</RelativeLayout>
+
+

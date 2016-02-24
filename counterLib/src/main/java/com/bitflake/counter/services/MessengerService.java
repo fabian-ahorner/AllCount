@@ -1,4 +1,4 @@
-package com.bitflake.counter;
+package com.bitflake.counter.services;
 
 import android.app.Service;
 import android.content.Intent;
@@ -9,11 +9,6 @@ import android.os.Messenger;
 import android.os.RemoteException;
 
 public class MessengerService extends Service {
-
-    /**
-     * Command to the service to display a message
-     */
-    static final int MSG_SAY_HELLO = 1;
 
     /**
      * Handler of incoming messages from clients.
@@ -39,7 +34,8 @@ public class MessengerService extends Service {
         return mMessenger.getBinder();
     }
 
-    public void handleMessage(Message msg) {
+    public boolean handleMessage(Message msg) {
+        return false;
     }
 
     public static boolean sendMessage(Messenger m, Message msg) {

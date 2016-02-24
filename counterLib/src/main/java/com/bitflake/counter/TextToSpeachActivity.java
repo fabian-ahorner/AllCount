@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.speech.tts.TextToSpeech;
 import android.support.v7.app.AppCompatActivity;
+import android.view.WindowManager;
 
 public class TextToSpeachActivity extends AppCompatActivity implements TextToSpeech.OnInitListener {
 
@@ -15,7 +16,12 @@ public class TextToSpeachActivity extends AppCompatActivity implements TextToSpe
     @Override
     public void onCreate(Bundle savedInstanceState, PersistableBundle persistentState) {
         super.onCreate(savedInstanceState, persistentState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 
     private TextToSpeech mTts;
@@ -39,9 +45,9 @@ public class TextToSpeachActivity extends AppCompatActivity implements TextToSpe
     @Override
     protected void onStart() {
         super.onStart();
-        Intent checkIntent = new Intent();
-        checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
-        startActivityForResult(checkIntent, MY_DATA_CHECK_CODE);
+//        Intent checkIntent = new Intent();
+//        checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
+//        startActivityForResult(checkIntent, MY_DATA_CHECK_CODE);
     }
 
     @Override
@@ -67,6 +73,8 @@ public class TextToSpeachActivity extends AppCompatActivity implements TextToSpe
 
     @Override
     public void onInit(int status) {
+        if (status == TextToSpeech.SUCCESS) {
 
+        }
     }
 }

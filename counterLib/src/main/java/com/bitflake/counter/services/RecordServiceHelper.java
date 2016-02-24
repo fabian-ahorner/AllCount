@@ -3,9 +3,6 @@ package com.bitflake.counter.services;
 import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
-import android.os.RemoteException;
-
-import com.bitflake.counter.MessengerService;
 
 public class RecordServiceHelper {
 

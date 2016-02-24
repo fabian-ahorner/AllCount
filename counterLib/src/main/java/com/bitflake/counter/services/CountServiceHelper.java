@@ -4,8 +4,6 @@ import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 
-import com.bitflake.counter.MessengerService;
-
 public class CountServiceHelper {
     public interface Constants {
         int MSG_START_COUNTING = 1;
@@ -13,6 +11,8 @@ public class CountServiceHelper {
         int MSG_START_LISTENING = 3;
         int MSG_STOP_LISTENING = 5;
         int MSG_RESET_COUNTER = 6;
+        int MSG_START_TALKING = 7;
+        int MSG_STOP_TALKING = 8;
 
         int MSG_RESP_STATUS = 1;
         int MSG_RESP_COUNT = 2;
@@ -20,8 +20,12 @@ public class CountServiceHelper {
 
         String DATA_STATES = "states";
         String DATA_COUNT_PROGRESS = "countProgress";
+        String DATA_PARTICLE_COUNT = "particleCount";
+        String DATA_STATE_SCORES = "stateScores";
         String DATA_COUNT = "countNr";
         String DATA_IS_COUNTING = "isCounting";
+        String DATA_COUNT_OFFSET = "countOffset";
+        String DATA_SHOULD_TALK = "shouldTalk";
     }
 
     public static void stopCounting(Messenger serviceMessenger) {
@@ -29,11 +33,17 @@ public class CountServiceHelper {
     }
 
     public static void startCounting(Messenger serviceMessenger, Messenger incomingMessenger, Bundle states) {
+        startCounting(serviceMessenger, incomingMessenger, states, 0,false);
+    }
+
+    public static void startCounting(Messenger serviceMessenger, Messenger incomingMessenger, Bundle states, int countOffset, boolean shouldTalk) {
         Message msg = Message.obtain(null,
                 Constants.MSG_START_COUNTING, 0, 0);
         msg.replyTo = incomingMessenger;
         Bundle b = new Bundle();
         b.putBundle(Constants.DATA_STATES, states);
+        b.putInt(Constants.DATA_COUNT_OFFSET, countOffset);
+        b.putBoolean(Constants.DATA_SHOULD_TALK, shouldTalk);
         msg.setData(b);
         MessengerService.sendMessage(serviceMessenger, msg);
     }

@@ -10,9 +10,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
-import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.TextView;
@@ -21,16 +19,9 @@ import com.bitflake.counter.HorizontalPicker;
 import com.bitflake.counter.TextToSpeachActivity;
 import com.bitflake.counter.services.RecordService;
 import com.bitflake.counter.services.RecordServiceHelper;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.wearable.MessageApi;
-import com.google.android.gms.wearable.Node;
-import com.google.android.gms.wearable.NodeApi;
-import com.google.android.gms.wearable.Wearable;
 
 public class RecordActivity extends TextToSpeachActivity implements RecordServiceHelper.Constants {
 
-    private static final String TAG = "RecordActivity";
     private FloatingActionButton fab;
     private View progress;
     private Messenger incomingMessenger = new Messenger(new IncomingHandler());
@@ -40,7 +31,6 @@ public class RecordActivity extends TextToSpeachActivity implements RecordServic
     private HorizontalPicker pickerDelay;
     private HorizontalPicker pickerDuration;
     private View bSkip;
-    private GoogleApiClient mGoogleApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +45,7 @@ public class RecordActivity extends TextToSpeachActivity implements RecordServic
                 toggleCounting();
             }
         });
-        tStatus = (TextView) findViewById(R.id.tStatus);
+        tStatus = (TextView) findViewById(R.id.tMessage);
         layoutSettings = findViewById(R.id.recordSettings);
         bSkip = findViewById(R.id.skip);
         bSkip.setOnClickListener(new View.OnClickListener() {
@@ -69,7 +59,6 @@ public class RecordActivity extends TextToSpeachActivity implements RecordServic
         pickerDuration = (HorizontalPicker) findViewById(R.id.pickerDuration);
         Intent intent = new Intent(this, RecordService.class);
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
-
     }
 
     private void skipState() {
@@ -77,48 +66,15 @@ public class RecordActivity extends TextToSpeachActivity implements RecordServic
     }
 
     private void toggleCounting() {
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
-                    @Override
-                    public void onConnected(Bundle connectionHint) {
-                        Log.d(TAG, "onConnected: " + connectionHint);
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                NodeApi.GetConnectedNodesResult nodes = Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).await();
-                                for (Node node : nodes.getNodes()) {
-                                    MessageApi.SendMessageResult result = Wearable.MessageApi.sendMessage(
-                                            mGoogleApiClient, node.getId(), "/start_activity", "Test".getBytes()).await();
-                                }
-                            }
-                        }).start();                        // Now you can use the Data Layer API
-                    }
-
-                    @Override
-                    public void onConnectionSuspended(int cause) {
-                        Log.d(TAG, "onConnectionSuspended: " + cause);
-                    }
-                })
-                .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
-                    @Override
-                    public void onConnectionFailed(@NonNull ConnectionResult result) {
-                        Log.d(TAG, "onConnectionFailed: " + result);
-                    }
-                })
-                // Request access only to the Wearable API
-                .addApi(Wearable.API)
-                .build();
-        mGoogleApiClient.connect();
-//        if (serviceMessenger == null)
-//            return;
-//        if (recordingStatus == RecordService.STATUS_NONE || recordingStatus == RecordService.STATUS_FINISHED) {
-//            startRecording();
-//            fab.setImageResource(android.R.drawable.ic_media_pause);
-//        } else {
-//            RecordServiceHelper.stopRecording(serviceMessenger);
-//            fab.setImageResource(android.R.drawable.ic_media_play);
-//        }
+        if (serviceMessenger == null)
+            return;
+        if (recordingStatus == RecordService.STATUS_NONE || recordingStatus == RecordService.STATUS_FINISHED) {
+            startRecording();
+            fab.setImageResource(android.R.drawable.ic_media_pause);
+        } else {
+            RecordServiceHelper.stopRecording(serviceMessenger);
+            fab.setImageResource(android.R.drawable.ic_media_play);
+        }
     }
 
     private void startRecording() {

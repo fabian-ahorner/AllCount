@@ -3,6 +3,8 @@ package com.bitflake.counter;
 import android.os.Bundle;
 import android.os.Message;
 
+import com.bitflake.counter.services.MessengerService;
+
 public abstract class RecordCountIPCService extends MessengerService {
 
     public static final int MSG_START_RECORDING = 0;
@@ -14,21 +16,23 @@ public abstract class RecordCountIPCService extends MessengerService {
     public static final String MSG_DATA_RECORD_DURATION = "delay";
 
     @Override
-    public void handleMessage(Message msg) {
+    public boolean handleMessage(Message msg) {
         Bundle data = msg.getData();
         switch (msg.what) {
             case MSG_START_RECORDING:
                 startRecording(data.getLong(MSG_DATA_RECORD_DELAY), data.getLong(MSG_DATA_RECORD_DURATION));
-                break;
+                return true;
             case MSG_STOP_RECORDING:
                 stopRecording();
-                break;
+                return true;
             case MSG_START_COUNTING:
                 startCounting(data);
-                break;
+                return true;
             case MSG_STOP_COUNTING:
                 stopCounting();
-                break;
+                return true;
+            default:
+                return super.handleMessage(msg);
         }
     }
 

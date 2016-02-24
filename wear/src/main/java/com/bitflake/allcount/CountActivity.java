@@ -33,7 +33,6 @@ public class CountActivity extends TextToSpeachActivity implements CountServiceH
     private Bundle states;
     private int countOffset;
     private boolean startCounting;
-    private PatternView patternView;
 
     public static Intent getStartIntent(Context context, Bundle states, boolean start, int count) {
         Intent i = new Intent(context, CountActivity.class);
@@ -60,14 +59,13 @@ public class CountActivity extends TextToSpeachActivity implements CountServiceH
         tCount = (TextView) findViewById(R.id.tCount);
         tCount.setVisibility(View.VISIBLE);
         pCountProgress = findViewById(R.id.progress);
-        patternView = (PatternView) findViewById(R.id.patternView);
         findViewById(R.id.recordSettings).setVisibility(View.INVISIBLE);
 
         states = getIntent().getBundleExtra(EXTRA_STATES);
         countOffset = getIntent().getIntExtra(EXTRA_COUNT_OFFSET, 0);
         startCounting = getIntent().getBooleanExtra(EXTRA_START, false);
 
-        Intent intent = new Intent(this, MobileCountService.class);
+        Intent intent = new Intent(this, CountService.class);
         startService(intent);
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
@@ -97,9 +95,6 @@ public class CountActivity extends TextToSpeachActivity implements CountServiceH
             switch (msg.what) {
                 case MSG_RESP_COUNT_PROGRESS:
                     setCountProgress(countProgress);
-                    int[] particleCount = data.getIntArray(CountService.DATA_PARTICLE_COUNT);
-                    double[] stateScores = data.getDoubleArray(CountService.DATA_STATE_SCORES);
-                    patternView.setStats(particleCount, stateScores);
                     break;
                 case MSG_RESP_COUNT:
                     setCountProgress(countProgress);

@@ -1,11 +1,11 @@
 package com.bitflake.counter.services;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 
 import com.bitflake.counter.SensorCounter;
-import com.bitflake.counter.SensorService;
 import com.bitflake.counter.StateWindow;
 
 import java.util.HashSet;
@@ -18,6 +18,10 @@ public class CountService extends SensorService implements SensorCounter.CountLi
     private SensorCounter counter = new SensorCounter();
     private Set<Messenger> statusListeners = new HashSet<>();
     private Bundle statusBundle = new Bundle();
+    private int[] particleCounts;
+    private double[] stateScores;
+    protected int countOffset;
+    protected Bundle currentStates;
 
     @Override
     public void onCreate() {
@@ -30,7 +34,7 @@ public class CountService extends SensorService implements SensorCounter.CountLi
     }
 
     @Override
-    public void handleMessage(Message msg) {
+    public boolean handleMessage(Message msg) {
         Bundle data = msg.getData();
         switch (msg.what) {
             case MSG_START_COUNTING:
@@ -51,22 +55,29 @@ public class CountService extends SensorService implements SensorCounter.CountLi
             case MSG_RESET_COUNTER:
                 counter.reset();
                 break;
+            default:
+                return false;
         }
+        return true;
     }
 
     private void stopCounting() {
         stopListening();
         statusBundle.putBoolean(DATA_IS_COUNTING, false);
         sendStatusBundle(MSG_RESP_STATUS);
+        stopForeground(true);
     }
 
-    private void startCounting(Bundle data) {
+    protected void startCounting(Bundle data) {
         if (isListening())
             return;
         statusBundle.putBoolean(DATA_IS_COUNTING, true);
         sendStatusBundle(MSG_RESP_STATUS);
-        List<StateWindow> states = StateWindow.fromBundles(data.getBundle(DATA_STATES));
+        currentStates = data.getBundle(DATA_STATES);
+        List<StateWindow> states = StateWindow.fromBundles(currentStates);
+        counter.reset();
         counter.setStates(states);
+        countOffset = data.getInt(DATA_COUNT_OFFSET);
         startListening();
     }
 
@@ -78,6 +89,7 @@ public class CountService extends SensorService implements SensorCounter.CountLi
 
     @Override
     public void onCount(int count) {
+        count += countOffset;
         statusBundle.putInt(DATA_COUNT, count);
         statusBundle.putFloat(DATA_COUNT_PROGRESS, 0.5f);
         sendStatusBundle(MSG_RESP_COUNT);
@@ -86,6 +98,10 @@ public class CountService extends SensorService implements SensorCounter.CountLi
     @Override
     public void onCountProgress(float progress) {
         statusBundle.putFloat(DATA_COUNT_PROGRESS, progress);
+        particleCounts = counter.getParticleCounts(particleCounts);
+        statusBundle.putIntArray(DATA_PARTICLE_COUNT, particleCounts);
+        stateScores = counter.getStateScores(stateScores);
+        statusBundle.putDoubleArray(DATA_STATE_SCORES, stateScores);
         sendStatusBundle(MSG_RESP_COUNT_PROGRESS);
     }
 
@@ -102,5 +118,12 @@ public class CountService extends SensorService implements SensorCounter.CountLi
                 what, 0, 0);
         msg.setData(statusBundle);
         return sendMessage(m, msg);
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        if (!isListening())
+            stopSelf();
+        return super.onUnbind(intent);
     }
 }

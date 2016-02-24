@@ -17,25 +17,22 @@ public class Particle {
             double total = 0;
             StateWindow s = state;
             for (int i = 0; i < depth; i++) {
-                total += getScore(s);
+                total += s.getScore();
                 s = s.getNext();
                 if (s == null)
                     break;
             }
             double rand = Math.random() * total;
-            double cum = getScore(state);
+            double cum = state.getScore();
             while (cum < rand) {
                 state = state.getNext();
-                cum += getScore(state);
+                cum += state.getScore();
             }
             error += state.getDistance();
             state.addParticle();
         }
     }
 
-    public double getScore(StateWindow s) {
-        return 1 / Math.pow((1 + s.getDistance()), 4);
-    }
 
     public void setState(StateWindow state) {
         this.error = 0;
@@ -46,5 +43,13 @@ public class Particle {
 
     public double getError() {
         return error;
+    }
+
+    public double getDistance() {
+        return state.getDistance();
+    }
+
+    public StateWindow getState() {
+        return state;
     }
 }

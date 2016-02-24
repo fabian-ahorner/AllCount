@@ -163,7 +163,7 @@ public class MainActivity extends TextToSpeachActivity implements SensorEventLis
     private void startListening() {
         slidingWindow.clear();
         readCount = 0;
-        mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_FASTEST);
         initCharts();
         readCount = 0;
         readCount = 0;

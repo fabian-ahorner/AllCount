@@ -1,10 +1,12 @@
-package com.bitflake.counter;
+package com.bitflake.counter.services;
 
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+
+import com.bitflake.counter.SlidingWindow;
 
 public class SensorService extends MessengerService implements SensorEventListener {
     private boolean isListening;

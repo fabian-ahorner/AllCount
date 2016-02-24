@@ -7,6 +7,7 @@ import android.view.animation.LinearInterpolator;
 import android.widget.TextView;
 
 import com.bitflake.counter.HorizontalPicker;
+import com.bitflake.counter.PatternView;
 import com.bitflake.counter.SensorActivity;
 import com.bitflake.counter.SensorCounter;
 import com.bitflake.counter.StateExtractor;
@@ -32,6 +33,7 @@ public class RecordCountActivity extends SensorActivity implements SensorCounter
     private HorizontalPicker pDelay;
     private HorizontalPicker pDuration;
     private View bSkip;
+    private PatternView patternView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +45,7 @@ public class RecordCountActivity extends SensorActivity implements SensorCounter
         pCountProgress = findViewById(R.id.progress);
         counter.setCountListener(this);
         recordSettings = findViewById(R.id.recordSettings);
+        patternView = (PatternView) findViewById(R.id.patternView);
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(this);
         bReset = findViewById(R.id.reset);
@@ -102,6 +105,7 @@ public class RecordCountActivity extends SensorActivity implements SensorCounter
         if (!counter.hasStates()) {
             stateExtractor.compressStates();
             counter.setStates(stateExtractor.getStates());
+//            patternView.setStates(stateExtractor.getStates());
         }
         stopListening();
         pCountProgress.setTranslationX(-pCountProgress.getWidth());
@@ -118,6 +122,7 @@ public class RecordCountActivity extends SensorActivity implements SensorCounter
     @Override
     public void onCountProgress(float progress) {
         pCountProgress.animate().translationX((1 - progress) * -pCountProgress.getWidth()).setDuration(100);
+        patternView.invalidate();
     }
 
     @Override

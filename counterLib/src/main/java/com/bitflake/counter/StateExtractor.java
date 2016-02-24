@@ -33,7 +33,7 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
         mergeList.clear();
         lastState = null;
         distSumm = 0;
-        lastStateId=0;
+        lastStateId = 0;
     }
 
     @Override

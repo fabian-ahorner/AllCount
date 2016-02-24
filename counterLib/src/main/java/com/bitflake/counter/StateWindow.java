@@ -33,6 +33,18 @@ public class StateWindow {
             sim += Math.pow(sd[i] - w.sd[i], 2);
         }
         return Math.sqrt(sim) / (means.length * 2);
+//        double sim = 0;
+//        for (int i = 0; i < means.length; i++) {
+//            sim += getSimLog(means[i], w.means[i]);
+//            sim += getSimLog(sd[i], w.sd[i]);
+//        }
+//        return -sim;
+    }
+
+    private double getSimLog(double v1, double v2) {
+        v1 += 0.01;
+        v2 += 0.01;
+        return Math.log10((2 * v1 * v2) / (v1 * v1 + v2 * v2));
     }
 
     public void setNext(StateWindow w) {
@@ -146,5 +158,9 @@ public class StateWindow {
         if (states.isEmpty())
             return null;
         return states.get(0).toBundles();
+    }
+
+    public double getScore() {
+        return 1 / Math.pow((1 + getDistance()), 2);
     }
 }

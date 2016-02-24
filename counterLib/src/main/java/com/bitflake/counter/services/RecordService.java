@@ -5,7 +5,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 
-import com.bitflake.counter.SensorService;
 import com.bitflake.counter.StateExtractor;
 import com.bitflake.counter.StateWindow;
 
@@ -41,26 +40,28 @@ public class RecordService extends SensorService implements RecordServiceHelper.
     }
 
     @Override
-    public void handleMessage(Message msg) {
+    public boolean handleMessage(Message msg) {
         Bundle data = msg.getData();
         switch (msg.what) {
             case MSG_START_RECORDING:
                 startDelay(data);
                 statusListeners.add(msg.replyTo);
-                break;
+                return true;
             case MSG_STOP_RECORDING:
                 stopRecording();
-                break;
+                return true;
             case MSG_SKIP_STATE:
                 skipState();
-                break;
+                return true;
             case MSG_START_LISTENING:
                 sendStatus(MSG_RESP_STATUS, msg.replyTo, 0);
                 statusListeners.add(msg.replyTo);
-                break;
+                return true;
             case MSG_STOP_LISTENING:
                 statusListeners.remove(msg.replyTo);
-                break;
+                return true;
+            default:
+                return super.handleMessage(msg);
         }
     }
 
