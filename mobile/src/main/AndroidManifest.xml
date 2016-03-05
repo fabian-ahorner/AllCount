@@ -6,6 +6,7 @@
         android:name="com.google.android.gms.version"
         android:value="@integer/google_play_services_version" />
     <application
+        android:name="com.bitflake.counter.wear.WearConnectionApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -41,7 +42,21 @@
         </activity>
 
         <service android:name=".MobileCountService" />
-        <service android:name="com.bitflake.counter.services.RecordService" />
+        <service android:name="com.bitflake.counter.services.WearRecordService" />
+        <service android:name="com.bitflake.counter.services.WearCountService" />
+        <service android:name=".VoiceFeedbackService" />
+
+        <!--<receiver android:name="com.bitflake.counter.wear.WearMiddlemenReceiver">-->
+            <!--<intent-filter>-->
+                <!--<action android:name="com.bitflake.counter.count.control.wear" />-->
+                <!--<action android:name="com.bitflake.counter.record.control.wear" />-->
+            <!--</intent-filter>-->
+        <!--</receiver>-->
+        <service android:name="com.bitflake.counter.services.WearBroadcastProxyService">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

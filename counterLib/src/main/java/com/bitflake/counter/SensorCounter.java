@@ -41,7 +41,7 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
             for (StateWindow s : states) {
                 maxStateDistance = Math.max(maxStateDistance, s.getDistanceToNext());
             }
-            maxStateDistance *= 1;
+            maxStateDistance *= 2;
             this.firstState = states.get(0);
             particleSelector.setElements(particles);
             stateSelector.setElements(states);
@@ -94,12 +94,12 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
 
         double totalError = 0;
         for (Particle p : particles) {
-            if (p.getError() > maxStateDistance) {
-                if (p.getState() == mostLikelyState)
-                    p.setState(firstState);
-                else
-                    p.setState(mostLikelyState);
-            } else
+//            if (p.getError() > maxStateDistance) {
+//                if (p.getState() == mostLikelyState)
+//                    p.setState(firstState);
+//                else
+//                    p.setState(mostLikelyState);
+//            } else
                 totalError += p.getError();
         }
         for (int i = 0; i < particles.size() / 5; i++) {
@@ -169,20 +169,20 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
         return count;
     }
 
-    public int[] getParticleCounts(int[] olds) {
+    public float[] getParticleCounts(float[] olds) {
         if (olds == null || olds.length != states.size())
-            olds = new int[states.size()];
+            olds = new float[states.size()];
         for (int i = 0; i < states.size(); i++) {
-            olds[i] = states.get(i).getParticleCount();
+            olds[i] = (float) states.get(i).getParticleCount();
         }
         return olds;
     }
 
-    public double[] getStateScores(double[] olds) {
+    public float[] getStateScores(float[] olds) {
         if (olds == null || olds.length != states.size())
-            olds = new double[states.size()];
+            olds = new float[states.size()];
         for (int i = 0; i < states.size(); i++) {
-            olds[i] = states.get(i).getScore();
+            olds[i] = (float) states.get(i).getScore();
         }
         return olds;
     }

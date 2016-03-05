@@ -1,54 +1,89 @@
 package com.bitflake.counter.services;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
-import android.os.Message;
-import android.os.Messenger;
 
-public class RecordServiceHelper {
+import com.bitflake.counter.Constances;
 
-    public interface Constants {
-        int MSG_START_RECORDING = 1;
-        int MSG_STOP_RECORDING = 2;
-        int MSG_START_LISTENING = 3;
-        int MSG_STOP_LISTENING = 5;
-        int MSG_SKIP_STATE = 6;
+public class RecordServiceHelper extends ServiceHelper implements RecordConstants {
+    private RecordEventListener listener;
 
-        int MSG_RESP_STATUS = 1;
-        int MSG_RESP_START_DELAY = 2;
-        int MSG_RESP_START_RECORDING = 3;
-        int MSG_RESP_STOPPED_RECORDING = 4;
-        int MSG_RESP_FINISHED_RECORDING = 5;
-
-        String DATA_DELAY_MS = "delay";
-        String DATA_DURATION_MS = "duration";
-
-        int STATUS_NONE = 0;
-        int STATUS_DELAY = 1;
-        int STATUS_RECORDING = 2;
-        int STATUS_FINISHED = 3;
+    public RecordServiceHelper(Context context) {
+        super(context, Constances.INTENT_RECORD_CONTROL);
     }
 
-    public static void startRecording(Messenger serviceMessenger, Messenger incomingMessenger, int delay, int duration) {
-        Message msg = Message.obtain(null,
-                Constants.MSG_START_RECORDING, 0, 0);
-        Bundle b = new Bundle();
-        b.putInt(Constants.DATA_DELAY_MS, delay);
-        b.putInt(Constants.DATA_DURATION_MS, duration);
-        msg.setData(b);
-        msg.replyTo = incomingMessenger;
-        MessengerService.sendMessage(serviceMessenger, msg);
+    public void startRecording(int delay, int duration) {
+        Intent i = createControlIntent();
+        i.putExtra(DATA_COMMAND, CMD_START_RECORDING);
+        i.putExtra(DATA_DELAY_MS, delay);
+        i.putExtra(DATA_DURATION_MS, duration);
+        sendBroadcast(i);
     }
 
-    public static void stopRecording(Messenger serviceMessenger) {
-        MessengerService.sendSignalMessage(serviceMessenger, Constants.MSG_STOP_RECORDING);
+    private void sendControlSignal(String cmd) {
+        Intent i = createControlIntent();
+        i.putExtra(DATA_COMMAND, cmd);
+        sendBroadcast(i);
     }
 
-    public static void startListening(Messenger serviceMessenger, Messenger incomingMessenger) {
-        MessengerService.sendSignalMessage(serviceMessenger, incomingMessenger, Constants.MSG_START_LISTENING);
+    public void stopRecording() {
+        sendControlSignal(CMD_STOP_RECORDING);
     }
 
-    public static void skipState(Messenger serviceMessenger) {
-        MessengerService.sendSignalMessage(serviceMessenger, Constants.MSG_SKIP_STATE);
+    public void skipState() {
+        sendControlSignal(CMD_SKIP);
     }
 
+    public void enableEventListener(RecordEventListener listener) {
+        this.listener = listener;
+        super.enableBroadCastListener(Constances.INTENT_RECORD_STATUS);
+    }
+
+    public void disableEventListener() {
+        listener = null;
+        super.disableBroadcastListener();
+    }
+
+    @Override
+    protected void onReceiveBroadcast(Intent intent) {
+        if (listener == null)
+            return;
+        Bundle data = intent.getExtras();
+        listener.onBroadcastReceived(data);
+        String event = data.getString(DATA_EVENT_TYPE);
+        switch (event) {
+            case EVENT_FINISHED_RECORDING:
+                listener.onFinishedRecording(data);
+                break;
+            case EVENT_START_DELAY:
+                listener.onStartDelay(data);
+                break;
+            case EVENT_START_RECORDING:
+                listener.onStartRecording(data);
+                break;
+            case EVENT_STATUS:
+                listener.onStatusReceived(data);
+                break;
+            case EVENT_STOP_RECORDING:
+                listener.onStopRecording(data);
+                break;
+        }
+        super.onReceiveBroadcast(intent);
+    }
+
+    public interface RecordEventListener {
+
+        void onStatusReceived(Bundle data);
+
+        void onFinishedRecording(Bundle data);
+
+        void onStartDelay(Bundle data);
+
+        void onStartRecording(Bundle data);
+
+        void onStopRecording(Bundle data);
+
+        void onBroadcastReceived(Bundle data);
+    }
 }

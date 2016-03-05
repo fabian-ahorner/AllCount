@@ -5,13 +5,16 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.support.annotation.Nullable;
 
-public abstract class BroadcastReceiverService extends Service {
+public class BroadcastReceiverService extends Service {
+    private IBinder binder=new Binder();
 
     @Override
     public void onCreate() {
@@ -35,7 +38,13 @@ public abstract class BroadcastReceiverService extends Service {
         }
     };
 
-    private void onReceive(Intent intent) {
+    public void onReceive(Intent intent) {
 
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return binder;
     }
 }

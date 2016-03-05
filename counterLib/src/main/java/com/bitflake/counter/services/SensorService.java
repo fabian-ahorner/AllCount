@@ -1,59 +1,48 @@
 package com.bitflake.counter.services;
 
-import android.content.Context;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-
 import com.bitflake.counter.SlidingWindow;
+import com.bitflake.counter.sensors.LocalAccelerationSensor;
+import com.bitflake.counter.sensors.SensorDataProvider;
+import com.bitflake.counter.sensors.SensorValueListener;
+import com.bitflake.counter.sensors.WearAccelerationSensor;
 
-public class SensorService extends MessengerService implements SensorEventListener {
-    private boolean isListening;
+public class SensorService extends BroadcastReceiverService implements SensorValueListener {
     private SlidingWindow window = new SlidingWindow(3, 10);
-    private SensorManager mSensorManager;
-    private Sensor mSensor;
+    private SensorDataProvider sensor;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+//        sensor = new WearAccelerationSensor(this);
+//        sensor.setValueListener(this);
+        sensor = new LocalAccelerationSensor(this);
+        sensor.setValueListener(this);
     }
 
     public void stopListening() {
-        mSensorManager.unregisterListener(this);
-        isListening = false;
+        sensor.stopListening();
     }
 
     public void startListening() {
-        if (isListening)
-            return;
-        mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_FASTEST);
-        isListening = true;
+        sensor.startListening();
     }
 
     public boolean isListening() {
-        return isListening;
+        return sensor.isListening();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        stopListening();
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        window.addData(event.values);
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
+        sensor.destroy();
     }
 
     public void setAnalyser(SlidingWindow.WindowAnalyser analyser) {
         window.setAnalyser(analyser);
+    }
+
+    @Override
+    public void onValueChanged(float[] values) {
+        window.addData(values);
     }
 }

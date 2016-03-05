@@ -3,17 +3,25 @@ package com.bitflake.counter;
 import android.os.Bundle;
 import android.util.SparseArray;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.Expose;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class StateWindow {
+    @Expose
     private double[] means;
+    @Expose
     private double[] sd;
+    @Expose
     private StateWindow next;
+    @Expose
+    private int id;
     private double distanceToNext = 0;
     private double distance;
     private int particleCount = 0;
-    private int id;
 
     public StateWindow(double[] means, double[] sd, int id) {
         this.means = means;
@@ -114,40 +122,54 @@ public class StateWindow {
     }
 
     public static List<StateWindow> fromBundles(Bundle bundle) {
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+        StateWindow state = gson.fromJson(bundle.getString("data"), StateWindow.class);
         List<StateWindow> states = new ArrayList<>();
-        SparseArray<StateWindow> stateMap = new SparseArray<>();
-        Bundle b = bundle;
-        do {
-            StateWindow state = fromBundle(b);
+
+        while (state != null) {
             states.add(state);
-            stateMap.put(state.getId(), state);
-            b = b.getBundle("nextBundle");
-        } while (b != null);
-        b = bundle;
-        do {
-            int id = b.getInt("id");
-            if (b.containsKey("next")) {
-                int next = b.getInt("next");
-                StateWindow state = stateMap.get(id);
-                state.setNext(stateMap.get(next));
-            }
-            b = b.getBundle("nextBundle");
-        } while (b != null);
+            state = state.getNext();
+        }
         return states;
+
+//        List<StateWindow> states = new ArrayList<>();
+//        SparseArray<StateWindow> stateMap = new SparseArray<>();
+//        Bundle b = bundle;
+//        do {
+//            StateWindow state = fromBundle(b);
+//            states.add(state);
+//            stateMap.put(state.getId(), state);
+//            b = b.getBundle("nextBundle");
+//        } while (b != null);
+//        b = bundle;
+//        do {
+//            int id = b.getInt("id");
+//            if (b.containsKey("next")) {
+//                int next = b.getInt("next");
+//                StateWindow state = stateMap.get(id);
+//                state.setNext(stateMap.get(next));
+//            }
+//            b = b.getBundle("nextBundle");
+//        } while (b != null);
+//        return states;
     }
 
     public Bundle toBundles() {
-        Bundle bundle = toBundle();
-        StateWindow s = next;
-        Bundle b = bundle;
-
-        do {
-            Bundle nextBundle = s.toBundle();
-            b.putBundle("nextBundle", nextBundle);
-            b = nextBundle;
-            s = s.getNext();
-        } while (s != null);
-        return bundle;
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+        Bundle b = new Bundle();
+        b.putString("data", gson.toJson(this));
+        return b;
+//        Bundle bundle = toBundle();
+//        StateWindow s = next;
+//        Bundle b = bundle;
+//
+//        do {
+//            Bundle nextBundle = s.toBundle();
+//            b.putBundle("nextBundle", nextBundle);
+//            b = nextBundle;
+//            s = s.getNext();
+//        } while (s != null);
+//        return bundle;
     }
 
     public int getId() {

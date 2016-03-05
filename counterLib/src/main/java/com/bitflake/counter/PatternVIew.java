@@ -1,14 +1,20 @@
 package com.bitflake.counter;
 
 import android.annotation.TargetApi;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Canvas;
 import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.os.Build;
+import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.View;
+
+import com.bitflake.counter.services.CountConstants;
 
 public class PatternView extends View {
     private Paint paintScore;
@@ -16,8 +22,8 @@ public class PatternView extends View {
     private Path path;
     private double maxScore;
     private double maxParticles;
-    private int[] particleCount;
-    private double[] stateScores;
+    private float[] particleCount;
+    private float[] stateScores;
 
     public PatternView(Context context) {
         super(context);
@@ -55,6 +61,13 @@ public class PatternView extends View {
         paintParticles.setStrokeCap(Paint.Cap.ROUND);
         paintParticles.setStrokeWidth(strokeWith);
         path = new Path();
+        getContext().registerReceiver(receiver, new IntentFilter(Constances.INTENT_COUNT_PROGRESS));
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        getContext().unregisterReceiver(receiver);
     }
 
     @Override
@@ -91,10 +104,19 @@ public class PatternView extends View {
         }
     }
 
-    public void setStats(int[] particleCount, double[] stateScores) {
+    public void setStats(float[] particleCount, float[] stateScores) {
         this.particleCount = particleCount;
         this.stateScores = stateScores;
         invalidate();
     }
 
+    public BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Bundle data = intent.getExtras();
+            particleCount = data.getFloatArray(CountConstants.DATA_PARTICLE_COUNT);
+            stateScores = data.getFloatArray(CountConstants.DATA_STATE_SCORES);
+            invalidate();
+        }
+    };
 }

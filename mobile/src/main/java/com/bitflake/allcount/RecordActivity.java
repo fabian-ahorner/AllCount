@@ -1,46 +1,29 @@
 package com.bitflake.allcount;
 
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Message;
-import android.os.Messenger;
-import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.TextView;
 
 import com.bitflake.counter.HorizontalPicker;
-import com.bitflake.counter.TextToSpeachActivity;
-import com.bitflake.counter.services.RecordService;
+import com.bitflake.counter.ServiceConnectedActivity;
+import com.bitflake.counter.services.RecordConstants;
+import com.bitflake.counter.services.WearRecordService;
 import com.bitflake.counter.services.RecordServiceHelper;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.wearable.MessageApi;
-import com.google.android.gms.wearable.Node;
-import com.google.android.gms.wearable.NodeApi;
-import com.google.android.gms.wearable.Wearable;
 
-public class RecordActivity extends TextToSpeachActivity implements RecordServiceHelper.Constants {
-
-    private static final String TAG = "RecordActivity";
+public class RecordActivity extends ServiceConnectedActivity implements RecordConstants, RecordServiceHelper.RecordEventListener {
     private FloatingActionButton fab;
     private View progress;
-    private Messenger incomingMessenger = new Messenger(new IncomingHandler());
-    private int recordingStatus = RecordService.STATUS_NONE;
     private TextView tStatus;
     private View layoutSettings;
     private HorizontalPicker pickerDelay;
     private HorizontalPicker pickerDuration;
     private View bSkip;
-    private GoogleApiClient mGoogleApiClient;
+    private RecordServiceHelper recordHelper;
+    private int status;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,100 +50,90 @@ public class RecordActivity extends TextToSpeachActivity implements RecordServic
         progress = findViewById(R.id.progress);
         pickerDelay = (HorizontalPicker) findViewById(R.id.pickerDelay);
         pickerDuration = (HorizontalPicker) findViewById(R.id.pickerDuration);
-        Intent intent = new Intent(this, RecordService.class);
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        recordHelper = new RecordServiceHelper(this);
+        startService(new Intent(this, WearRecordService.class));
+        ensureConnection(VoiceFeedbackService.class);
+        ensureConnection(WearRecordService.class);
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        recordHelper.enableEventListener(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        recordHelper.disableEventListener();
+    }
+
+    private void updateStatus() {
+        boolean isRunning = status == STATUS_RECORDING || status == STATUS_DELAY;
+
+        int visibleIfRunning = isRunning ? View.VISIBLE : View.INVISIBLE;
+        int visibleIfNotRunning = isRunning ? View.INVISIBLE : View.VISIBLE;
+
+        tStatus.setVisibility(visibleIfRunning);
+        bSkip.setVisibility(visibleIfRunning);
+        layoutSettings.setVisibility(visibleIfNotRunning);
+
+        fab.setImageResource(isRunning ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play);
+        if (isRunning) {
+            tStatus.setText(status == STATUS_DELAY ? R.string.get_ready : R.string.recording);
+        }
+    }
+
+    @Override
+    public void onStatusReceived(Bundle data) {
+        updateStatus();
+    }
+
+    public void onFinishedRecording(Bundle data) {
+        useStates(data.getBundle(DATA_STATES));
+        resetUI();
+    }
+
+    public void onStartRecording(Bundle data) {
+        updateStatus();
+        startProgressAnimation(data);
+    }
+
+    @Override
+    public void onStopRecording(Bundle data) {
+        resetUI();
+    }
+
+    @Override
+    public void onBroadcastReceived(Bundle data) {
+        status = data.getInt(DATA_STATUS);
+    }
+
+    public void onStartDelay(Bundle data) {
+        updateStatus();
+        startProgressAnimation(data);
+    }
+
+    private void startProgressAnimation(Bundle data) {
+        int duration = data.getInt(DATA_DURATION_MS);
+        animateProgress(0, 1, duration);
     }
 
     private void skipState() {
-        RecordServiceHelper.skipState(serviceMessenger);
+        recordHelper.skipState();
     }
 
     private void toggleCounting() {
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
-                    @Override
-                    public void onConnected(Bundle connectionHint) {
-                        Log.d(TAG, "onConnected: " + connectionHint);
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                NodeApi.GetConnectedNodesResult nodes = Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).await();
-                                for (Node node : nodes.getNodes()) {
-                                    MessageApi.SendMessageResult result = Wearable.MessageApi.sendMessage(
-                                            mGoogleApiClient, node.getId(), "/start_activity", "Test".getBytes()).await();
-                                }
-                            }
-                        }).start();                        // Now you can use the Data Layer API
-                    }
-
-                    @Override
-                    public void onConnectionSuspended(int cause) {
-                        Log.d(TAG, "onConnectionSuspended: " + cause);
-                    }
-                })
-                .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
-                    @Override
-                    public void onConnectionFailed(@NonNull ConnectionResult result) {
-                        Log.d(TAG, "onConnectionFailed: " + result);
-                    }
-                })
-                // Request access only to the Wearable API
-                .addApi(Wearable.API)
-                .build();
-        mGoogleApiClient.connect();
-//        if (serviceMessenger == null)
-//            return;
-//        if (recordingStatus == RecordService.STATUS_NONE || recordingStatus == RecordService.STATUS_FINISHED) {
-//            startRecording();
-//            fab.setImageResource(android.R.drawable.ic_media_pause);
-//        } else {
-//            RecordServiceHelper.stopRecording(serviceMessenger);
-//            fab.setImageResource(android.R.drawable.ic_media_play);
-//        }
-    }
-
-    private void startRecording() {
-        int delay = getValueFromPicker(pickerDelay);
-        int duration = getValueFromPicker(pickerDuration);
-        RecordServiceHelper.startRecording(serviceMessenger, incomingMessenger, delay, duration);
-    }
-
-    class IncomingHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {
-            recordingStatus = msg.arg1;
-            switch (msg.what) {
-                case MSG_RESP_STOPPED_RECORDING:
-                    resetUI();
-                    break;
-                case MSG_RESP_START_DELAY:
-                    speak(R.string.get_ready);
-                    tStatus.setText(R.string.get_ready);
-                    tStatus.setVisibility(View.VISIBLE);
-                    bSkip.setVisibility(View.VISIBLE);
-                    layoutSettings.setVisibility(View.INVISIBLE);
-                    animateProgress(0, 1, msg.arg2);
-                    break;
-                case MSG_RESP_START_RECORDING:
-                    speak(R.string.recording);
-                    tStatus.setVisibility(View.VISIBLE);
-                    tStatus.setText(R.string.recording);
-                    bSkip.setVisibility(View.VISIBLE);
-                    layoutSettings.setVisibility(View.INVISIBLE);
-                    animateProgress(0, 1, msg.arg2);
-                    break;
-                case MSG_RESP_FINISHED_RECORDING:
-                    speak(R.string.stop_recording);
-                    useStates(msg.getData());
-                    resetUI();
-                    break;
-                default:
-                    super.handleMessage(msg);
-            }
+        if (status == WearRecordService.STATUS_NONE || status == WearRecordService.STATUS_FINISHED) {
+            recordHelper.startRecording(getValue(pickerDelay), getValue(pickerDuration));
+            fab.setImageResource(android.R.drawable.ic_media_pause);
+            startService(new Intent(this, VoiceFeedbackService.class));
+        } else {
+            recordHelper.stopRecording();
+            fab.setImageResource(android.R.drawable.ic_media_play);
         }
     }
+
 
     private void useStates(Bundle states) {
         Intent intent = CountActivity.getStartIntent(this, states, true, 1);
@@ -175,27 +148,8 @@ public class RecordActivity extends TextToSpeachActivity implements RecordServic
         setProgressBar(0);
     }
 
-    private Messenger serviceMessenger;
-    private ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            serviceMessenger = new Messenger(service);
-            RecordServiceHelper.startListening(serviceMessenger, incomingMessenger);
-        }
 
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            serviceMessenger = null;
-        }
-    };
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unbindService(serviceConnection);
-    }
-
-    private static int getValueFromPicker(HorizontalPicker picker) {
+    private static int getValue(HorizontalPicker picker) {
         return Integer.valueOf(picker.getValues()[picker.getSelectedItem()].toString()) * 1000;
     }
 

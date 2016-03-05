@@ -1,39 +1,38 @@
 package com.bitflake.allcount;
 
-import android.content.ComponentName;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Message;
-import android.os.Messenger;
 import android.support.design.widget.FloatingActionButton;
 import android.view.View;
 import android.widget.TextView;
 
+import com.bitflake.counter.Constances;
 import com.bitflake.counter.PatternView;
-import com.bitflake.counter.TextToSpeachActivity;
-import com.bitflake.counter.services.CountService;
+import com.bitflake.counter.ServiceConnectedActivity;
+import com.bitflake.counter.services.CountConstants;
+import com.bitflake.counter.services.WearCountService;
 import com.bitflake.counter.services.CountServiceHelper;
 
 
-public class CountActivity extends TextToSpeachActivity implements CountServiceHelper.Constants {
+public class CountActivity extends ServiceConnectedActivity implements CountConstants {
 
     private static final String EXTRA_START = "start";
+//    private static final String EXTRA_TARGET = "target";
     private static final String EXTRA_COUNT_OFFSET = "count";
     private static final String EXTRA_STATES = "states";
     private TextView tCount;
     private FloatingActionButton fab;
     private View pCountProgress;
-    private Messenger incomingMessenger = new Messenger(new IncomingHandler());
     private boolean isCounting;
     private Bundle states;
     private int countOffset;
-    private boolean startCounting;
     private PatternView patternView;
+    private CountServiceHelper countServiceHelper;
+    private View bReset;
 
     public static Intent getStartIntent(Context context, Bundle states, boolean start, int count) {
         Intent i = new Intent(context, CountActivity.class);
@@ -43,6 +42,11 @@ public class CountActivity extends TextToSpeachActivity implements CountServiceH
         return i;
     }
 
+    public static Intent getStartIntent(Context context, String target) {
+        Intent i = new Intent(context, CountActivity.class);
+//        i.putExtra(EXTRA_TARGET, target);
+        return i;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +61,13 @@ public class CountActivity extends TextToSpeachActivity implements CountServiceH
                 toggleCounting();
             }
         });
+        bReset = findViewById(R.id.reset);
+        bReset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                resetCounter();
+            }
+        });
         tCount = (TextView) findViewById(R.id.tCount);
         tCount.setVisibility(View.VISIBLE);
         pCountProgress = findViewById(R.id.progress);
@@ -65,89 +76,106 @@ public class CountActivity extends TextToSpeachActivity implements CountServiceH
 
         states = getIntent().getBundleExtra(EXTRA_STATES);
         countOffset = getIntent().getIntExtra(EXTRA_COUNT_OFFSET, 0);
-        startCounting = getIntent().getBooleanExtra(EXTRA_START, false);
+//        target = getIntent().getStringExtra(EXTRA_TARGET);
+//        if (target == null)
+//            target = Constances.INTENT_TARGET_MOBILE;
+        tCount.setText(String.valueOf(countOffset));
+        boolean startCounting = getIntent().getBooleanExtra(EXTRA_START, false);
 
-        Intent intent = new Intent(this, MobileCountService.class);
-        startService(intent);
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+        this.countServiceHelper = new CountServiceHelper(this);
+        if (startCounting) {
+            startServiceAndCounting();
+            fab.setImageResource(android.R.drawable.ic_media_pause);
+        } else {
+            startService(new Intent(this, MobileCountService.class));
+        }
+        ensureConnection(MobileCountService.class);
+        ensureConnection(VoiceFeedbackService.class);
+    }
+
+    private void startServiceAndCounting() {
+        Intent i = new Intent(this,
+                MobileCountService.class);
+        i.putExtra(DATA_COMMAND, CMD_START_COUNTING);
+        i.putExtra(DATA_STATES, states);
+        i.putExtra(DATA_COUNT_OFFSET, countOffset);
+        startService(i);
+    }
+
+    private void resetCounter() {
+        tCount.setText("0");
+        bReset.setVisibility(View.INVISIBLE);
+        countOffset = 0;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(dataReceiver, new IntentFilter(Constances.INTENT_COUNT_STATUS));
+        countServiceHelper.requestUpdate();
+//        registerReceiver(dataReceiver, new IntentFilter(Constances.INTENT_COUNT_STATUS + Constances.INTENT_TARGET_WEAR));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(dataReceiver);
     }
 
     private void toggleCounting() {
-        if (serviceMessenger == null)
-            return;
         if (isCounting) {
-            CountServiceHelper.stopCounting(serviceMessenger);
+            countServiceHelper.stopCounting();
             fab.setImageResource(android.R.drawable.ic_media_play);
         } else {
-            CountServiceHelper.startCounting(serviceMessenger, incomingMessenger, states, countOffset, true);
+            countServiceHelper.startCounting(states, countOffset);
             countOffset = 0;
             fab.setImageResource(android.R.drawable.ic_media_pause);
+            startService(new Intent(this, VoiceFeedbackService.class));
         }
     }
 
-    class IncomingHandler extends Handler {
+    private BroadcastReceiver dataReceiver = new BroadcastReceiver() {
         @Override
-        public void handleMessage(Message msg) {
-            Bundle data = msg.getData();
-            int count = data.getInt(CountService.DATA_COUNT);
+        public void onReceive(Context context, Intent intent) {
+            Bundle data = intent.getExtras();
+            int count = data.getInt(WearCountService.DATA_COUNT);
             countOffset = count;
-            float countProgress = data.getFloat(CountService.DATA_COUNT_PROGRESS);
-            isCounting = data.getBoolean(CountService.DATA_IS_COUNTING);
+            boolean isCounting = data.getBoolean(WearCountService.DATA_IS_COUNTING);
+            if (isCounting != CountActivity.this.isCounting) {
+                CountActivity.this.isCounting = isCounting;
+                fab.setImageResource(isCounting ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play);
+                bReset.setVisibility(isCounting || count == 0 ? View.INVISIBLE : View.VISIBLE);
+            }
             String sCount = String.valueOf(count);
-            switch (msg.what) {
-                case MSG_RESP_COUNT_PROGRESS:
-                    setCountProgress(countProgress);
-                    int[] particleCount = data.getIntArray(CountService.DATA_PARTICLE_COUNT);
-                    double[] stateScores = data.getDoubleArray(CountService.DATA_STATE_SCORES);
-                    patternView.setStats(particleCount, stateScores);
-                    break;
-                case MSG_RESP_COUNT:
-                    setCountProgress(countProgress);
-                    tCount.setText(sCount);
-                    break;
-                case MSG_RESP_STATUS:
-                    setCountProgress(countProgress);
-                    tCount.setText(sCount);
-                    fab.setImageResource(isCounting ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play);
+            tCount.setText(sCount);
+            String event = data.getString(DATA_EVENT_TYPE);
+            switch (event) {
+                case EVENT_STATUS:
+                    states = data.getBundle(DATA_STATES);
+                case EVENT_START_COUNTING:
+                case EVENT_STOP_COUNTING:
+                    setCountProgress(0);
                     break;
                 default:
-                    super.handleMessage(msg);
-            }
-        }
-    }
-
-
-    private Messenger serviceMessenger;
-    private ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            serviceMessenger = new Messenger(service);
-            CountServiceHelper.startListening(serviceMessenger, incomingMessenger);
-            if (!isCounting && startCounting) {
-                toggleCounting();
             }
         }
 
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            serviceMessenger = null;
-        }
     };
+
 
     public void setCountProgress(float progress) {
         pCountProgress.setTranslationX(-(1 - progress) * pCountProgress.getWidth());
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unbindService(serviceConnection);
-    }
-
-    @Override
     public void onBackPressed() {
-        if (isCounting)
-            toggleCounting();
+//        if (isCounting)
+//            toggleCounting();
         super.onBackPressed();
     }
 }

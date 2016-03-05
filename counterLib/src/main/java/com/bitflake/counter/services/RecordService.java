@@ -1,24 +1,24 @@
 package com.bitflake.counter.services;
 
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.os.Messenger;
 
+import com.bitflake.counter.Constances;
 import com.bitflake.counter.StateExtractor;
 import com.bitflake.counter.StateWindow;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
-public class RecordService extends SensorService implements RecordServiceHelper.Constants {
+public class RecordService extends SensorService implements RecordConstants {
     private Handler handler = new Handler();
     private StateExtractor stateExtractor = new StateExtractor();
-    private Set<Messenger> statusListeners = new HashSet<>();
-    private int status = STATUS_NONE;
-    private int delay;
-    private int duration;
+    protected int status = STATUS_NONE;
+    int delay;
+    int duration;
     private Runnable rStartRecording = new Runnable() {
         @Override
         public void run() {
@@ -37,31 +37,39 @@ public class RecordService extends SensorService implements RecordServiceHelper.
     public void onCreate() {
         super.onCreate();
         setAnalyser(stateExtractor);
+        super.registerReceiver(new IntentFilter(Constances.INTENT_RECORD_CONTROL));
     }
 
     @Override
-    public boolean handleMessage(Message msg) {
-        Bundle data = msg.getData();
-        switch (msg.what) {
-            case MSG_START_RECORDING:
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null) {
+            onReceive(intent);
+        }
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
+    public void onReceive(Intent intent) {
+        Bundle data = intent.getExtras();
+        if (data == null)
+            return;
+        String cmd = data.getString(DATA_COMMAND);
+        switch (cmd) {
+            case CMD_START_RECORDING:
                 startDelay(data);
-                statusListeners.add(msg.replyTo);
-                return true;
-            case MSG_STOP_RECORDING:
+                break;
+            case CMD_STOP_RECORDING:
                 stopRecording();
-                return true;
-            case MSG_SKIP_STATE:
+                stopSelf();
+                break;
+            case CMD_SKIP:
                 skipState();
-                return true;
-            case MSG_START_LISTENING:
-                sendStatus(MSG_RESP_STATUS, msg.replyTo, 0);
-                statusListeners.add(msg.replyTo);
-                return true;
-            case MSG_STOP_LISTENING:
-                statusListeners.remove(msg.replyTo);
-                return true;
+                break;
+            case CMD_REQUEST_UPDATE:
+                broadcastStatus(EVENT_STATUS);
+                break;
             default:
-                return super.handleMessage(msg);
+                break;
         }
     }
 
@@ -79,7 +87,7 @@ public class RecordService extends SensorService implements RecordServiceHelper.
         stopListening();
         this.status = STATUS_NONE;
         this.states = null;
-        sendStatus(MSG_RESP_STOPPED_RECORDING, 0);
+        broadcastStatus(EVENT_STOP_RECORDING);
         handler.removeCallbacks(rStartRecording);
         handler.removeCallbacks(rFinishRecording);
     }
@@ -93,7 +101,7 @@ public class RecordService extends SensorService implements RecordServiceHelper.
             if (delay == 0) {
                 startRecording();
             } else {
-                sendStatus(MSG_RESP_START_DELAY, delay);
+                broadcastStatus(EVENT_START_DELAY, delay);
                 handler.postDelayed(rStartRecording, delay);
             }
         }
@@ -105,7 +113,7 @@ public class RecordService extends SensorService implements RecordServiceHelper.
         states = null;
         status = STATUS_RECORDING;
         stateExtractor.clear();
-        sendStatus(MSG_RESP_START_RECORDING, duration);
+        broadcastStatus(EVENT_START_RECORDING, duration);
         handler.postDelayed(rFinishRecording, duration);
         startListening();
     }
@@ -117,27 +125,36 @@ public class RecordService extends SensorService implements RecordServiceHelper.
         status = STATUS_FINISHED;
         stateExtractor.compressStates();
         this.states = StateWindow.toBundle(stateExtractor.getStates());
-        sendStatus(MSG_RESP_FINISHED_RECORDING, 0);
+        broadcastStates();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         stopRecording();
+        unregisterReceiver();
     }
 
-    public void sendStatus(int what, int duration) {
-        Iterator<Messenger> it = statusListeners.iterator();
-        while (it.hasNext()) {
-            if (!sendStatus(what, it.next(), duration))
-                it.remove();
-        }
+    public void broadcastStatus(String eventType) {
+        sendBroadcast(createIntent(eventType));
     }
 
-    public boolean sendStatus(int what, Messenger m, int duration) {
-        Message msg = Message.obtain(null,
-                what, status, duration);
-        msg.setData(states);
-        return sendMessage(m, msg);
+    public void broadcastStatus(String eventType, int duration) {
+        Intent i = createIntent(eventType);
+        i.putExtra(DATA_DURATION_MS, duration);
+        sendBroadcast(i);
+    }
+
+    public void broadcastStates() {
+        Intent i = createIntent(EVENT_FINISHED_RECORDING);
+        i.putExtra(DATA_STATES, states);
+        sendBroadcast(i);
+    }
+
+    public Intent createIntent(String eventType) {
+        Intent i = new Intent(Constances.INTENT_RECORD_STATUS);
+        i.putExtra(DATA_EVENT_TYPE, eventType);
+        i.putExtra(DATA_STATUS, status);
+        return i;
     }
 }
