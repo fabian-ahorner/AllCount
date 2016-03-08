@@ -1,13 +1,16 @@
 package com.bitflake.counter;
 
+import java.util.Arrays;
+
 public class SlidingWindow {
-    double[][] values;
+    private static final int INITIAL_WINDOW_SIZE = 10;
+    double[][] window;
     double[] sums;
     private int windowPosition;
     private WindowAnalyser analyser;
 
-    public SlidingWindow(int sensorCount, int windowSize) {
-        values = new double[windowSize][sensorCount];
+    public SlidingWindow(int sensorCount, int windowDuration) {
+        window = new double[INITIAL_WINDOW_SIZE][sensorCount];
         sums = new double[sensorCount];
         windowPosition = 0;
     }
@@ -17,30 +20,31 @@ public class SlidingWindow {
     }
 
     public void addData(float[] values) {
-        for (int i = 0; i < values.length; i++) {
-            this.values[windowPosition][i] = values[i];
+        if (windowPosition >= values.length) {
+            double[][] newWindow = new double[window.length * 2][window[0].length];
+            for (int i = 0; i < window.length; i++) {
+                newWindow[i] = window[i];
+            }
         }
         for (int i = 0; i < values.length; i++) {
+            this.window[windowPosition][i] = values[i];
             sums[i] += values[i];
         }
         windowPosition++;
-        if (windowPosition == this.values.length) {
+        if (windowPosition == this.window.length) {
             windowPosition = 0;
-            analyseWindow(this.values, sums);
-            for (int i = 0; i < values.length; i++) {
-                sums[i] = 0;
-            }
+            analyseWindow();
         }
     }
 
-    private void analyseWindow(double[][] values, double[] sums) {
+    private void analyseWindow() {
         if (analyser != null) {
             double[] means = new double[sums.length];
             for (int sensor = 0; sensor < sums.length; sensor++) {
                 means[sensor] = sums[sensor] / values.length;
             }
             double[] var = new double[means.length];
-            for (int i = 0; i < values.length; i++) {
+            for (int i = 0; i < windowPosition; i++) {
                 for (int sensor = 0; sensor < sums.length; sensor++) {
                     var[sensor] += Math.pow(values[i][sensor] - means[sensor], 2);
                 }
@@ -49,6 +53,7 @@ public class SlidingWindow {
             for (int sensor = 0; sensor < sums.length; sensor++) {
                 var[sensor] /= values.length;
                 sd[sensor] = Math.sqrt(var[sensor]);
+                sums[sensor] = 0;
             }
             analyser.analyseWindow(new StateWindow(means, sd));
         }

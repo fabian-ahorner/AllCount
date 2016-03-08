@@ -9,11 +9,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SensorCounter implements SlidingWindow.WindowAnalyser {
-    private static final int PARTICLE_COUNT = 100;
+    public static final int PARTICLE_COUNT = 100;
 
     private List<StateWindow> states;
     private CountListener listener;
-    private SlidingWindow slidingWindow;
     private ArrayList<Particle> particles = new ArrayList<>(PARTICLE_COUNT);
     private RouletteWheelSelection<Particle> particleSelector = new RouletteWheelSelection<>(ScoreProviders.PARTICLE);
     private RouletteWheelSelection<StateWindow> stateSelector = new RouletteWheelSelection<>(ScoreProviders.STATE);
@@ -76,7 +75,7 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
         double totalError = 0;
         for (Particle p : particles) {
             p.move();
-            totalError += p.getError();
+            totalError += p.getCumulatedError();
         }
         int mostLikelyStateIndex = getMostLikelyState();
         StateWindow mostLikelyState = states.get(mostLikelyStateIndex);
@@ -92,27 +91,31 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
     private void resample(int mostLikelyStateIndex) {
         StateWindow mostLikelyState = states.get(mostLikelyStateIndex);
 
+        boolean isDeadEnd = mostLikelyState.getDistance() > maxStateDistance;
         double totalError = 0;
+        stateSelector.setFromTo(0, mostLikelyStateIndex + 1);
+
         for (Particle p : particles) {
-//            if (p.getError() > maxStateDistance) {
-//                if (p.getState() == mostLikelyState)
-//                    p.setState(firstState);
-//                else
-//                    p.setState(mostLikelyState);
-//            } else
-                totalError += p.getError();
+            if (p.getCumulatedError() > maxStateDistance) {
+                if (isDeadEnd)
+                    p.setState(firstState);
+                else
+//                    p.setState(stateSelector.pickElement());
+                    p.setState(mostLikelyState);
+            } else
+                totalError += p.getCumulatedError();
         }
         for (int i = 0; i < particles.size() / 5; i++) {
             double rand = Math.random() * totalError;
             double cum = 0;
             for (Particle p : particles) {
-                cum += p.getError();
+                cum += p.getCumulatedError();
 
                 if (cum >= rand) {
-                    totalError -= p.getError();
-//                    int newState = RouletteWheelSelection.getSelectedIndex(states, ScoreProviders.STATE, 0, mostLikelyStateIndex + 1);
-//                    p.setState(states.get(newState));
-                    p.setState(mostLikelyState);
+                    totalError -= p.getCumulatedError();
+//                    int newState = stateSelector.pickElement();
+                    p.setState(stateSelector.pickElement());
+//                    p.setState(mostLikelyState);
                     break;
                 }
             }

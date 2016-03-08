@@ -19,9 +19,11 @@ public class StateWindow {
     private StateWindow next;
     @Expose
     private int id;
+    @Expose
     private double distanceToNext = 0;
     private double distance;
     private int particleCount = 0;
+    private int totalParticles;
 
     public StateWindow(double[] means, double[] sd, int id) {
         this.means = means;
@@ -122,16 +124,7 @@ public class StateWindow {
     }
 
     public static List<StateWindow> fromBundles(Bundle bundle) {
-        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
-        StateWindow state = gson.fromJson(bundle.getString("data"), StateWindow.class);
-        List<StateWindow> states = new ArrayList<>();
-
-        while (state != null) {
-            states.add(state);
-            state = state.getNext();
-        }
-        return states;
-
+        return fromJSON(bundle.getString("data"));
 //        List<StateWindow> states = new ArrayList<>();
 //        SparseArray<StateWindow> stateMap = new SparseArray<>();
 //        Bundle b = bundle;
@@ -157,7 +150,7 @@ public class StateWindow {
     public Bundle toBundles() {
         Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
         Bundle b = new Bundle();
-        b.putString("data", gson.toJson(this));
+        b.putString("data", toJSON());
         return b;
 //        Bundle bundle = toBundle();
 //        StateWindow s = next;
@@ -183,6 +176,31 @@ public class StateWindow {
     }
 
     public double getScore() {
-        return 1 / Math.pow((1 + getDistance()), 2);
+        return 1 / Math.pow((1 + getDistance()), 4);
+    }
+
+    public static String toJSON(List<StateWindow> states) {
+        return states.get(0).toJSON();
+    }
+
+    public String toJSON() {
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+        return gson.toJson(this);
+    }
+
+    public static List<StateWindow> fromJSON(String json) {
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+        StateWindow state = gson.fromJson(json, StateWindow.class);
+        List<StateWindow> states = new ArrayList<>();
+
+        while (state != null) {
+            states.add(state);
+            state = state.getNext();
+        }
+        return states;
+    }
+
+    public void setTotalParticles(int totalParticles) {
+        this.totalParticles = totalParticles;
     }
 }

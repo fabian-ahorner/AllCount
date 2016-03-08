@@ -43,7 +43,7 @@ public class RouletteWheelSelection<T> {
     }
 
     private int pickElementIndex() {
-        return pickElementIndex(total, 0, elements.size());
+        return pickElementIndex(total, from, to);
     }
 
     private int pickElementIndex(double total, int from, int to) {

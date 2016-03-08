@@ -95,7 +95,7 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
 //    public void extractFeatures() {
 //        int sensorCount = dataManager.getSensorCount();
 //        DataInputStream[] is = new DataInputStream[sensorCount];
-//        double[][] values = new double[windowSize][sensorCount];
+//        double[][] window = new double[windowSize][sensorCount];
 //        double[] sum = new double[sensorCount];
 //        for (int i = 0; i < sensorCount; i++) {
 //            is[i] = dataManager.openSensorInputStream(i);
@@ -104,8 +104,8 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
 //            int w = 0;
 //            while (is[0].available()>0) {
 //                for (int i = 0; i < sensorCount; i++) {
-//                    values[w][i] = is[i].readDouble();
-//                    sum[i] += values[w][i];
+//                    window[w][i] = is[i].readDouble();
+//                    sum[i] += window[w][i];
 //                }
 //                w++;
 //                if (w >= windowSize) {

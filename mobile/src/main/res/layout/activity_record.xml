@@ -8,7 +8,7 @@
     android:background="#212121"
     android:fitsSystemWindows="true"
     android:orientation="vertical"
-    tools:context="com.bitflake.allcount.CountActivity">
+    tools:context="com.bitflake.allcount.WearCountActivity">
 
     <RelativeLayout
         android:layout_width="match_parent"

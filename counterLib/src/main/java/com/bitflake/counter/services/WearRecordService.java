@@ -1,5 +1,6 @@
 package com.bitflake.counter.services;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -26,6 +27,13 @@ public class WearRecordService extends RecordService implements RecordConstants,
         mGoogleApiClient.connect();
     }
 
+    @Override
+    public void onReceive(Intent intent) {
+        super.onReceive(intent);
+        updateData();
+    }
+
+
     public void updateData() {
         if (!isConnected)
             return;
@@ -51,5 +59,17 @@ public class WearRecordService extends RecordService implements RecordConstants,
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         isConnected = false;
+    }
+
+    @Override
+    void startRecording() {
+        super.startRecording();
+        updateData();
+    }
+
+    @Override
+    void finishRecording() {
+        super.finishRecording();
+        updateData();
     }
 }

@@ -80,7 +80,9 @@ public class NotificationReceiver extends WearBroadcastProxyService {
         }
         extender.addAction(getRecordAction(RecordConstants.CMD_SKIP, android.R.drawable.ic_media_next, getString(R.string.skip)));
         extender.addAction(getRecordAction(RecordConstants.CMD_STOP_RECORDING, android.R.drawable.ic_media_pause, getString(R.string.stop_recording)));
-        return null;
+        return notificationBuilder
+                .extend(extender)
+                .build();
     }
 
     private void updateCountNotification(DataMap dataMap) {
@@ -137,12 +139,5 @@ public class NotificationReceiver extends WearBroadcastProxyService {
                 new NotificationCompat.Action.Builder(icon,
                         title, actionPendingIntent)
                         .build();
-    }
-
-    @Override
-    public void onChannelOpened(Channel channel) {
-        super.onChannelOpened(channel);
-        RecordSensorService.start(this, channel);
-        Log.d("my", "onChannelOpened");
     }
 }

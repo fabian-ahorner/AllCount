@@ -18,7 +18,7 @@ import com.bitflake.counter.services.WearCountService;
 import com.bitflake.counter.services.CountServiceHelper;
 
 
-public class CountActivity extends ServiceConnectedActivity implements CountConstants {
+public class WearCountActivity extends ServiceConnectedActivity implements CountConstants {
 
     private static final String EXTRA_START = "start";
     private static final String EXTRA_COUNT_OFFSET = "count";
@@ -33,7 +33,7 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
     private View bReset;
 
     public static Intent getStartIntent(Context context, Bundle states, boolean start, int count) {
-        Intent i = new Intent(context, CountActivity.class);
+        Intent i = new Intent(context, WearCountActivity.class);
         i.putExtra(EXTRA_START, start);
         i.putExtra(EXTRA_COUNT_OFFSET, count);
         i.putExtra(EXTRA_STATES, states);

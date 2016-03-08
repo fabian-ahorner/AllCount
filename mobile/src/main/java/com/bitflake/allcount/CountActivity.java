@@ -7,12 +7,17 @@ import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 
+import com.bitflake.allcount.db.CounterEntry;
 import com.bitflake.counter.Constances;
 import com.bitflake.counter.PatternView;
 import com.bitflake.counter.ServiceConnectedActivity;
+import com.bitflake.counter.StateWindow;
 import com.bitflake.counter.services.CountConstants;
 import com.bitflake.counter.services.WearCountService;
 import com.bitflake.counter.services.CountServiceHelper;
@@ -21,9 +26,10 @@ import com.bitflake.counter.services.CountServiceHelper;
 public class CountActivity extends ServiceConnectedActivity implements CountConstants {
 
     private static final String EXTRA_START = "start";
-//    private static final String EXTRA_TARGET = "target";
+    //    private static final String EXTRA_TARGET = "target";
     private static final String EXTRA_COUNT_OFFSET = "count";
     private static final String EXTRA_STATES = "states";
+    private static final String EXTRA_STATES_ID = "id";
     private TextView tCount;
     private FloatingActionButton fab;
     private View pCountProgress;
@@ -33,6 +39,11 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
     private PatternView patternView;
     private CountServiceHelper countServiceHelper;
     private View bReset;
+
+    private long id;
+    private long stateId;
+    private CounterEntry counterEntry;
+    private EditText counterName;
 
     public static Intent getStartIntent(Context context, Bundle states, boolean start, int count) {
         Intent i = new Intent(context, CountActivity.class);
@@ -70,15 +81,38 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
         });
         tCount = (TextView) findViewById(R.id.tCount);
         tCount.setVisibility(View.VISIBLE);
+        counterName = (EditText) findViewById(R.id.counterName);
+        counterName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                saveCounter();
+            }
+        });
         pCountProgress = findViewById(R.id.progress);
         patternView = (PatternView) findViewById(R.id.patternView);
-        findViewById(R.id.recordSettings).setVisibility(View.INVISIBLE);
 
         states = getIntent().getBundleExtra(EXTRA_STATES);
+        stateId = getIntent().getLongExtra(EXTRA_STATES_ID, -1);
+        if (states == null) {
+            counterEntry = CounterEntry.findById(CounterEntry.class, stateId);
+            this.states = StateWindow.toBundle(counterEntry.getStates());
+        }
+
+        if (counterEntry != null) {
+            counterName.setText(counterEntry.getName());
+        }
+
         countOffset = getIntent().getIntExtra(EXTRA_COUNT_OFFSET, 0);
-//        target = getIntent().getStringExtra(EXTRA_TARGET);
-//        if (target == null)
-//            target = Constances.INTENT_TARGET_MOBILE;
         tCount.setText(String.valueOf(countOffset));
         boolean startCounting = getIntent().getBooleanExtra(EXTRA_START, false);
 
@@ -91,6 +125,15 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
         }
         ensureConnection(MobileCountService.class);
         ensureConnection(VoiceFeedbackService.class);
+    }
+
+    private void saveCounter() {
+        if (counterEntry == null) {
+            counterEntry = new CounterEntry(counterName.getText().toString(), states.getString("data"));
+        } else {
+            counterEntry.setName(counterName.getText().toString());
+        }
+        counterEntry.save();
     }
 
     private void startServiceAndCounting() {

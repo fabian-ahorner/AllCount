@@ -41,7 +41,7 @@ public class Particle {
         state.addParticle();
     }
 
-    public double getError() {
+    public double getCumulatedError() {
         return error;
     }
 

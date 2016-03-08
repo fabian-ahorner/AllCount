@@ -54,7 +54,6 @@ public class RecordActivity extends ServiceConnectedActivity implements RecordCo
         recordHelper = new RecordServiceHelper(this);
 //        startService(new Intent(this, WearRecordService.class));
 //        ensureConnection(WearRecordService.class);
-        RecordSensorService.start(this,null,"/sensor/acceleration");
     }
 
     @Override
@@ -140,7 +139,7 @@ public class RecordActivity extends ServiceConnectedActivity implements RecordCo
     }
 
     private void useStates(Bundle states) {
-        Intent intent = CountActivity.getStartIntent(this, states, true, 1);
+        Intent intent = WearCountActivity.getStartIntent(this, states, true, 1);
         startActivity(intent);
     }
 

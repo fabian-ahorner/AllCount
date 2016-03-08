@@ -335,7 +335,7 @@ public class HorizontalPicker extends View {
     }
 
     /**
-     * TODO cache values
+     * TODO cache window
      * @param text
      * @return
      */
@@ -684,8 +684,8 @@ public class HorizontalPicker extends View {
     }
 
     /**
-     * Sets values to choose from
-     * @param values New values to choose from
+     * Sets window to choose from
+     * @param values New window to choose from
      */
     public void setValues(CharSequence[] values) {
 

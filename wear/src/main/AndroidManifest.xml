@@ -12,21 +12,12 @@
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault">
         <activity
-            android:name=".MainActivity"
-            android:label="@string/app_name">
-            <!--<intent-filter>-->
-            <!--<action android:name="android.intent.action.MAIN" />-->
-
-            <!--<category android:name="android.intent.category.LAUNCHER" />-->
-            <!--</intent-filter>-->
-        </activity>
-        <activity
             android:name=".RecordCountActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name=".CountActivity"
+            android:name=".WearCountActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
@@ -34,27 +25,13 @@
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar" />
 
-        <activity
-            android:name=".SensorRecordActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
         <service android:name="com.bitflake.counter.services.WearRecordService" />
         <service android:name="com.bitflake.counter.services.WearCountService" />
-        <service android:name=".RecordSensorService" />
 
         <receiver android:name="com.bitflake.counter.wear.WearMiddlemenReceiver">
             <intent-filter>
-                <action android:name="com.bitflake.counter.count.status" />
                 <action android:name="com.bitflake.counter.count.control" />
-                <action android:name="com.bitflake.counter.count.progress" />
-                <action android:name="com.bitflake.counter.record.status" />
+                <action android:name="com.bitflake.counter.record.control" />
             </intent-filter>
         </receiver>
         <service android:name=".NotificationReceiver">

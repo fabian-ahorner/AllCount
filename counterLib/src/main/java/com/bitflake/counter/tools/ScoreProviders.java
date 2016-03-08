@@ -1,6 +1,7 @@
 package com.bitflake.counter.tools;
 
 import com.bitflake.counter.Particle;
+import com.bitflake.counter.SensorCounter;
 import com.bitflake.counter.StateWindow;
 
 public class ScoreProviders {
@@ -13,7 +14,8 @@ public class ScoreProviders {
     public static final RouletteWheelSelection.ScoreProvider<StateWindow> STATE = new RouletteWheelSelection.ScoreProvider<StateWindow>() {
         @Override
         public double getScore(StateWindow s) {
-            return s.getParticleCount() * s.getScore();
+            // 0.00001: To avoid zero scores
+            return 0.00001 + s.getScore() * (1 + s.getParticleCount() / SensorCounter.PARTICLE_COUNT);//
         }
     };
 }

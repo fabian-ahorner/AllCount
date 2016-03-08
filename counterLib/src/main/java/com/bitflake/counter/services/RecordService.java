@@ -107,7 +107,7 @@ public class RecordService extends SensorService implements RecordConstants {
         }
     }
 
-    private void startRecording() {
+    void startRecording() {
         if (status == STATUS_RECORDING)
             return;
         states = null;
@@ -118,7 +118,7 @@ public class RecordService extends SensorService implements RecordConstants {
         startListening();
     }
 
-    private void finishRecording() {
+    void finishRecording() {
         if (status != STATUS_RECORDING)
             return;
         stopListening();

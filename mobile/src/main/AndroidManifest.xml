@@ -3,10 +3,23 @@
     package="com.bitflake.allcount">
 
     <meta-data
+        android:name="DATABASE"
+        android:value="bitflake.db" />
+    <meta-data
+        android:name="VERSION"
+        android:value="2" />
+    <meta-data
+        android:name="QUERY_LOG"
+        android:value="true" />
+    <meta-data
+        android:name="DOMAIN_PACKAGE_NAME"
+        android:value="com.bitflake.allcount" />
+    <meta-data
         android:name="com.google.android.gms.version"
         android:value="@integer/google_play_services_version" />
+
     <application
-        android:name="com.bitflake.counter.wear.WearConnectionApplication"
+        android:name=".MainApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -15,20 +28,17 @@
         <!--android:screenOrientation="portrait"-->
         <activity
             android:name=".MainActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:label="@string/app_name">
 
         </activity>
         <activity
             android:name=".CountActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:label="@string/app_name">
 
         </activity>
         <activity
             android:name=".RecordActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -47,10 +57,10 @@
         <service android:name=".VoiceFeedbackService" />
 
         <!--<receiver android:name="com.bitflake.counter.wear.WearMiddlemenReceiver">-->
-            <!--<intent-filter>-->
-                <!--<action android:name="com.bitflake.counter.count.control.wear" />-->
-                <!--<action android:name="com.bitflake.counter.record.control.wear" />-->
-            <!--</intent-filter>-->
+        <!--<intent-filter>-->
+        <!--<action android:name="com.bitflake.counter.count.control.wear" />-->
+        <!--<action android:name="com.bitflake.counter.record.control.wear" />-->
+        <!--</intent-filter>-->
         <!--</receiver>-->
         <service android:name="com.bitflake.counter.services.WearBroadcastProxyService">
             <intent-filter>
