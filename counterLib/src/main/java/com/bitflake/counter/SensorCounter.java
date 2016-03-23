@@ -1,7 +1,5 @@
 package com.bitflake.counter;
 
-import android.util.Log;
-
 import com.bitflake.counter.tools.RouletteWheelSelection;
 import com.bitflake.counter.tools.ScoreProviders;
 
@@ -16,7 +14,6 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
     private ArrayList<Particle> particles = new ArrayList<>(PARTICLE_COUNT);
     private RouletteWheelSelection<Particle> particleSelector = new RouletteWheelSelection<>();
     private RouletteWheelSelection.Selector<Particle> weakParticleSelector = particleSelector.addScoreProvider(ScoreProviders.PARTICLE_WEAK);
-    ;
     private RouletteWheelSelection.Selector<Particle> strongParticleSelector = particleSelector.addScoreProvider(ScoreProviders.PARTICLE_STRONG);
     private int count;
     private double maxStateDistance;
@@ -26,7 +23,6 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
     private Particle bestParticle;
     private double bestCumulatedError;
     private double worstCumulatedError;
-
     public SensorCounter() {
     }
 
