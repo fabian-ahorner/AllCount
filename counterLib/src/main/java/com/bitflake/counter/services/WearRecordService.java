@@ -40,8 +40,8 @@ public class WearRecordService extends RecordService implements RecordConstants,
         PutDataMapRequest putDataMapReq = PutDataMapRequest.create(WEAR_STATUS_PATH);
         DataMap dataMap = putDataMapReq.getDataMap();
         dataMap.putInt(DATA_STATUS, status);
-        dataMap.putInt(DATA_DELAY_MS, delay);
-        dataMap.putInt(DATA_DURATION_MS, duration);
+        dataMap.putLong(DATA_DELAY_MS, delay);
+        dataMap.putLong(DATA_DURATION_MS, duration);
         PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
         Wearable.DataApi.putDataItem(mGoogleApiClient, putDataReq);
     }
@@ -68,8 +68,8 @@ public class WearRecordService extends RecordService implements RecordConstants,
     }
 
     @Override
-    void finishRecording() {
-        super.finishRecording();
+    public void onFinishedRecording() {
+        super.onFinishedRecording();
         updateData();
     }
 }

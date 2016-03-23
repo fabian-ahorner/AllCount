@@ -47,4 +47,11 @@ public class BroadcastReceiverService extends Service {
     public IBinder onBind(Intent intent) {
         return binder;
     }
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null) {
+            onReceive(intent);
+        }
+        return super.onStartCommand(intent, flags, startId);
+    }
 }

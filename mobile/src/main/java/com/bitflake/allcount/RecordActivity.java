@@ -1,6 +1,7 @@
 package com.bitflake.allcount;
 
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -10,20 +11,20 @@ import android.widget.TextView;
 
 import com.bitflake.counter.HorizontalPicker;
 import com.bitflake.counter.ServiceConnectedActivity;
+import com.bitflake.counter.StateView;
 import com.bitflake.counter.services.RecordConstants;
-import com.bitflake.counter.services.WearRecordService;
 import com.bitflake.counter.services.RecordServiceHelper;
+import com.bitflake.counter.services.WearRecordService;
+import com.bitflake.counter.tools.TextChangeAnimator;
 
 public class RecordActivity extends ServiceConnectedActivity implements RecordConstants, RecordServiceHelper.RecordEventListener {
-    private FloatingActionButton fab;
     private View progress;
-    private TextView tStatus;
-    private View layoutSettings;
-    private HorizontalPicker pickerDelay;
-    private HorizontalPicker pickerDuration;
+    private TextChangeAnimator tStatus;
     private View bSkip;
     private RecordServiceHelper recordHelper;
     private int status;
+    private StateView stateView;
+    private RecordStillHelper stillHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,15 +32,11 @@ public class RecordActivity extends ServiceConnectedActivity implements RecordCo
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
         setContentView(R.layout.activity_record);
 
-        fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                toggleCounting();
-            }
-        });
-        tStatus = (TextView) findViewById(R.id.tStatus);
-        layoutSettings = findViewById(R.id.recordSettings);
+        TextView tStatus1 = (TextView) findViewById(R.id.tStatus1);
+        TextView tStatus2 = (TextView) findViewById(R.id.tStatus2);
+        tStatus = new TextChangeAnimator(tStatus1, tStatus2);
+        stateView = (StateView) findViewById(R.id.patternView);
+        stateView.listenToRecorder();
         bSkip = findViewById(R.id.skip);
         bSkip.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -47,10 +44,11 @@ public class RecordActivity extends ServiceConnectedActivity implements RecordCo
                 skipState();
             }
         });
+        bSkip.setVisibility(View.INVISIBLE);
         progress = findViewById(R.id.progress);
-        pickerDelay = (HorizontalPicker) findViewById(R.id.pickerDelay);
-        pickerDuration = (HorizontalPicker) findViewById(R.id.pickerDuration);
         recordHelper = new RecordServiceHelper(this);
+        stillHelper = new RecordStillHelper(findViewById(R.id.stillness));
+        registerReceiver(stillHelper, new IntentFilter(INTENT_RECORD_PROGRESS));
         startService(new Intent(this, WearRecordService.class));
         ensureConnection(VoiceFeedbackService.class);
         ensureConnection(WearRecordService.class);
@@ -59,6 +57,7 @@ public class RecordActivity extends ServiceConnectedActivity implements RecordCo
     @Override
     protected void onResume() {
         super.onResume();
+        recordHelper.requestUpdate();
         recordHelper.enableEventListener(this);
     }
 
@@ -68,35 +67,26 @@ public class RecordActivity extends ServiceConnectedActivity implements RecordCo
         recordHelper.disableEventListener();
     }
 
-    private void updateStatus() {
-        boolean isRunning = status == STATUS_RECORDING || status == STATUS_DELAY;
-
-        int visibleIfRunning = isRunning ? View.VISIBLE : View.INVISIBLE;
-        int visibleIfNotRunning = isRunning ? View.INVISIBLE : View.VISIBLE;
-
-        tStatus.setVisibility(visibleIfRunning);
-        bSkip.setVisibility(visibleIfRunning);
-        layoutSettings.setVisibility(visibleIfNotRunning);
-
-        fab.setImageResource(isRunning ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play);
-        if (isRunning) {
-            tStatus.setText(status == STATUS_DELAY ? R.string.get_ready : R.string.recording);
-        }
-    }
-
     @Override
     public void onStatusReceived(Bundle data) {
-        updateStatus();
+//        updateStatus();
+        long duration = data.getLong(DATA_DURATION_MS);
+        if (duration > 0) {
+            long remainingTime = data.getLong(DATA_REMAINING_TIME);
+            float currentProgress = remainingTime * progress.getWidth() / duration;
+            this.progress.setTranslationX(-currentProgress);
+            if (remainingTime > 0)
+                this.progress.animate().translationX(0).setDuration(remainingTime).setInterpolator(new LinearInterpolator());
+        }
     }
 
     public void onFinishedRecording(Bundle data) {
         useStates(data.getBundle(DATA_STATES));
-        resetUI();
+        finish();
     }
 
     public void onStartRecording(Bundle data) {
-        updateStatus();
-        startProgressAnimation(data);
+        tStatus.setText(R.string.start_calibrating_long);
     }
 
     @Override
@@ -109,13 +99,28 @@ public class RecordActivity extends ServiceConnectedActivity implements RecordCo
         status = data.getInt(DATA_STATUS);
     }
 
+    @Override
+    public void onStartCalibrating(Bundle data) {
+        tStatus.setText(R.string.start_calibrating_long);
+    }
+
+    @Override
+    public void onStartMoving(Bundle data) {
+        tStatus.setText(R.string.do_repetition);
+        bSkip.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onStartMoveBack(Bundle data) {
+        tStatus.setText(R.string.hold_still_at_start);
+    }
+
     public void onStartDelay(Bundle data) {
-        updateStatus();
         startProgressAnimation(data);
     }
 
     private void startProgressAnimation(Bundle data) {
-        int duration = data.getInt(DATA_DURATION_MS);
+        long duration = data.getLong(DATA_DURATION_MS);
         animateProgress(0, 1, duration);
     }
 
@@ -123,34 +128,14 @@ public class RecordActivity extends ServiceConnectedActivity implements RecordCo
         recordHelper.skipState();
     }
 
-    private void toggleCounting() {
-        if (status == WearRecordService.STATUS_NONE || status == WearRecordService.STATUS_FINISHED) {
-            recordHelper.startRecording(getValue(pickerDelay), getValue(pickerDuration));
-            fab.setImageResource(android.R.drawable.ic_media_pause);
-            startService(new Intent(this, VoiceFeedbackService.class));
-        } else {
-            recordHelper.stopRecording();
-            fab.setImageResource(android.R.drawable.ic_media_play);
-        }
-    }
-
-
     private void useStates(Bundle states) {
         Intent intent = CountActivity.getStartIntent(this, states, true, 1);
         startActivity(intent);
     }
 
     public void resetUI() {
-        fab.setImageResource(android.R.drawable.ic_media_play);
-        tStatus.setVisibility(View.INVISIBLE);
         bSkip.setVisibility(View.INVISIBLE);
-        layoutSettings.setVisibility(View.VISIBLE);
         setProgressBar(0);
-    }
-
-
-    private static int getValue(HorizontalPicker picker) {
-        return Integer.valueOf(picker.getValues()[picker.getSelectedItem()].toString()) * 1000;
     }
 
     public void setProgressBar(float progress) {
@@ -158,12 +143,19 @@ public class RecordActivity extends ServiceConnectedActivity implements RecordCo
         this.progress.setTranslationX(-(1 - progress) * this.progress.getWidth());
     }
 
-    public void animateProgress(float progress, int duration) {
+    public void animateProgress(float progress, long duration) {
         this.progress.animate().translationX(-(1 - progress) * this.progress.getWidth()).setDuration(duration).setInterpolator(new LinearInterpolator());
     }
 
-    public void animateProgress(float from, float to, int duration) {
+    public void animateProgress(float from, float to, long duration) {
         setProgressBar(from);
         animateProgress(to, duration);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        recordHelper.stopRecording();
+        unregisterReceiver(stillHelper);
     }
 }

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:gravity="center"
+    android:orientation="horizontal"
+    android:paddingBottom="16dip"
+    android:paddingLeft="16dip"
+    android:paddingRight="16dip"
+    android:paddingTop="16dip">
+
+    <com.bitflake.counter.StateView
+        android:id="@+id/counterVis"
+        android:layout_width="96dip"
+        android:layout_height="48dip"
+        android:layout_marginRight="32dip"
+        android:elevation="4dip" />
+
+    <TextView
+        android:id="@+id/text1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Test"
+        android:textAppearance="?android:textAppearanceLarge"
+        android:textStyle="bold" />
+</LinearLayout>

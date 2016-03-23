@@ -1,7 +1,6 @@
 package com.bitflake.counter;
 
 import android.os.Bundle;
-import android.util.SparseArray;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -10,13 +9,13 @@ import com.google.gson.annotations.Expose;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StateWindow {
+public class CountState {
     @Expose
-    private double[] means;
+    public double[] means;
     @Expose
-    private double[] sd;
+    public double[] sd;
     @Expose
-    private StateWindow next;
+    private CountState next;
     @Expose
     private int id;
     @Expose
@@ -24,19 +23,20 @@ public class StateWindow {
     private double distance;
     private int particleCount = 0;
     private int totalParticles;
+    private double maxStateDistance;
 
-    public StateWindow(double[] means, double[] sd, int id) {
+    public CountState(double[] means, double[] sd, int id) {
         this.means = means;
         this.sd = sd;
         this.id = id;
     }
 
-    public StateWindow(double[] means, double[] sd) {
+    public CountState(double[] means, double[] sd) {
         this.means = means;
         this.sd = sd;
     }
 
-    public double getDistance(StateWindow w) {
+    public double getDistance(CountState w) {
         double sim = 0;
         for (int i = 0; i < means.length; i++) {
             sim += Math.pow((means[i] - w.means[i]), 2);
@@ -57,7 +57,7 @@ public class StateWindow {
         return Math.log10((2 * v1 * v2) / (v1 * v1 + v2 * v2));
     }
 
-    public void setNext(StateWindow w) {
+    public void setNext(CountState w) {
         this.next = w;
         this.distanceToNext = w == null ? 0 : getDistance(w);
     }
@@ -66,7 +66,7 @@ public class StateWindow {
         return distanceToNext;
     }
 
-    public StateWindow getNext() {
+    public CountState getNext() {
         return next;
     }
 
@@ -76,10 +76,12 @@ public class StateWindow {
     }
 
 
-    public void updateDistance(StateWindow w) {
+    public void updateDistance(CountState w) {
         if (next != null)
             next.updateDistance(w);
         this.distance = getDistance(w);
+        if (maxStateDistance > 0)
+            this.distance /= maxStateDistance;
     }
 
     public double getDistance() {
@@ -116,20 +118,20 @@ public class StateWindow {
         return b;
     }
 
-    private static StateWindow fromBundle(Bundle bundle) {
+    private static CountState fromBundle(Bundle bundle) {
         double[] means = bundle.getDoubleArray("means");
         double[] sd = bundle.getDoubleArray("sd");
         int id = bundle.getInt("id");
-        return new StateWindow(means, sd, id);
+        return new CountState(means, sd, id);
     }
 
-    public static List<StateWindow> fromBundles(Bundle bundle) {
+    public static List<CountState> fromBundles(Bundle bundle) {
         return fromJSON(bundle.getString("data"));
-//        List<StateWindow> states = new ArrayList<>();
-//        SparseArray<StateWindow> stateMap = new SparseArray<>();
+//        List<CountState> states = new ArrayList<>();
+//        SparseArray<CountState> stateMap = new SparseArray<>();
 //        Bundle b = bundle;
 //        do {
-//            StateWindow state = fromBundle(b);
+//            CountState state = fromBundle(b);
 //            states.add(state);
 //            stateMap.put(state.getId(), state);
 //            b = b.getBundle("nextBundle");
@@ -139,7 +141,7 @@ public class StateWindow {
 //            int id = b.getInt("id");
 //            if (b.containsKey("next")) {
 //                int next = b.getInt("next");
-//                StateWindow state = stateMap.get(id);
+//                CountState state = stateMap.get(id);
 //                state.setNext(stateMap.get(next));
 //            }
 //            b = b.getBundle("nextBundle");
@@ -153,7 +155,7 @@ public class StateWindow {
         b.putString("data", toJSON());
         return b;
 //        Bundle bundle = toBundle();
-//        StateWindow s = next;
+//        CountState s = next;
 //        Bundle b = bundle;
 //
 //        do {
@@ -169,7 +171,7 @@ public class StateWindow {
         return id;
     }
 
-    public static Bundle toBundle(List<StateWindow> states) {
+    public static Bundle toBundle(List<CountState> states) {
         if (states.isEmpty())
             return null;
         return states.get(0).toBundles();
@@ -179,7 +181,7 @@ public class StateWindow {
         return 1 / Math.pow((1 + getDistance()), 4);
     }
 
-    public static String toJSON(List<StateWindow> states) {
+    public static String toJSON(List<CountState> states) {
         return states.get(0).toJSON();
     }
 
@@ -188,10 +190,9 @@ public class StateWindow {
         return gson.toJson(this);
     }
 
-    public static List<StateWindow> fromJSON(String json) {
-        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
-        StateWindow state = gson.fromJson(json, StateWindow.class);
-        List<StateWindow> states = new ArrayList<>();
+    public static List<CountState> fromJSON(String json) {
+        CountState state = stateFromJSON(json);
+        List<CountState> states = new ArrayList<>();
 
         while (state != null) {
             states.add(state);
@@ -200,7 +201,16 @@ public class StateWindow {
         return states;
     }
 
+    public static CountState stateFromJSON(String json) {
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+        return gson.fromJson(json, CountState.class);
+    }
+
     public void setTotalParticles(int totalParticles) {
         this.totalParticles = totalParticles;
+    }
+
+    public void setMaxStateDistance(double maxStateDistance) {
+        this.maxStateDistance = maxStateDistance;
     }
 }

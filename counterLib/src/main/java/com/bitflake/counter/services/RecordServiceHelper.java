@@ -4,20 +4,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.bitflake.counter.Constances;
-
 public class RecordServiceHelper extends ServiceHelper implements RecordConstants {
     private RecordEventListener listener;
 
     public RecordServiceHelper(Context context) {
-        super(context, Constances.INTENT_RECORD_CONTROL);
+        super(context, INTENT_RECORD_CONTROL);
     }
 
     public void startRecording(int delay, int duration) {
         Intent i = createControlIntent();
+//        Intent i = new Intent(getContext(),RecordService.class);
         i.putExtra(DATA_COMMAND, CMD_START_RECORDING);
         i.putExtra(DATA_DELAY_MS, delay);
         i.putExtra(DATA_DURATION_MS, duration);
+//        getContext().startService(i);
         sendBroadcast(i);
     }
 
@@ -37,7 +37,7 @@ public class RecordServiceHelper extends ServiceHelper implements RecordConstant
 
     public void enableEventListener(RecordEventListener listener) {
         this.listener = listener;
-        super.enableBroadCastListener(Constances.INTENT_RECORD_STATUS);
+        super.enableBroadCastListener(INTENT_RECORD_STATUS);
     }
 
     public void disableEventListener() {
@@ -59,7 +59,7 @@ public class RecordServiceHelper extends ServiceHelper implements RecordConstant
             case EVENT_START_DELAY:
                 listener.onStartDelay(data);
                 break;
-            case EVENT_START_RECORDING:
+            case EVENT_START_CALIBRATING:
                 listener.onStartRecording(data);
                 break;
             case EVENT_STATUS:
@@ -68,8 +68,18 @@ public class RecordServiceHelper extends ServiceHelper implements RecordConstant
             case EVENT_STOP_RECORDING:
                 listener.onStopRecording(data);
                 break;
+            case EVENT_START_MOVING:
+                listener.onStartMoving(data);
+                break;
+            case EVENT_START_MOVE_BACK:
+                listener.onStartMoveBack(data);
+                break;
         }
         super.onReceiveBroadcast(intent);
+    }
+
+    public void requestUpdate() {
+        sendControlSignal(CMD_REQUEST_UPDATE);
     }
 
     public interface RecordEventListener {
@@ -85,5 +95,11 @@ public class RecordServiceHelper extends ServiceHelper implements RecordConstant
         void onStopRecording(Bundle data);
 
         void onBroadcastReceived(Bundle data);
+
+        void onStartCalibrating(Bundle data);
+
+        void onStartMoving(Bundle data);
+
+        void onStartMoveBack(Bundle data);
     }
 }

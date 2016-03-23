@@ -21,39 +21,24 @@
     <application
         android:name=".MainApplication"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/ic_launcher_"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <!--android:screenOrientation="portrait"-->
-        <activity
-            android:name=".MainActivity"
-            android:label="@string/app_name">
-
-        </activity>
-        <activity
-            android:name=".CountActivity"
-            android:label="@string/app_name">
-
-        </activity>
-        <activity
-            android:name=".RecordActivity"
-            android:label="@string/app_name">
+        <activity android:name=".CountActivity" />
+        <activity android:name=".RecordActivity" />
+        <activity android:name=".RecordActivityBak" />
+        <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".RecordCountActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
-
-        </activity>
 
         <service android:name=".MobileCountService" />
         <service android:name="com.bitflake.counter.services.WearRecordService" />
-        <service android:name="com.bitflake.counter.services.WearCountService" />
+        <!--<service android:name="com.bitflake.counter.services.WearCountService" />-->
         <service android:name=".VoiceFeedbackService" />
 
         <!--<receiver android:name="com.bitflake.counter.wear.WearMiddlemenReceiver">-->

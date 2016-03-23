@@ -4,64 +4,85 @@ import java.util.Arrays;
 
 public class SlidingWindow {
     private static final int INITIAL_WINDOW_SIZE = 10;
+    private final int[] pos;
+    private final long windowDuration;
     double[][] window;
     double[] sums;
     private int windowPosition;
     private WindowAnalyser analyser;
+    private long lastRun = 0;
 
-    public SlidingWindow(int sensorCount, int windowDuration) {
-        window = new double[INITIAL_WINDOW_SIZE][sensorCount];
+    /**
+     * @param sensorCount
+     * @param analyseFrequency Per seconds
+     */
+    public SlidingWindow(int sensorCount, double analyseFrequency) {
+        window = new double[sensorCount][INITIAL_WINDOW_SIZE];
         sums = new double[sensorCount];
+        pos = new int[sensorCount];
         windowPosition = 0;
+        lastRun = System.nanoTime();
+        windowDuration = (long) (1000000000 / analyseFrequency);
     }
 
-    public void clear() {
-        windowPosition = 0;
+    public void resetWindow() {
+        for (int sensor = 0; sensor < sums.length; sensor++) {
+            pos[sensor] = 0;
+            sums[sensor] = 0;
+        }
+        lastRun = System.nanoTime();
     }
 
-    public void addData(float[] values) {
-        if (windowPosition >= values.length) {
-            double[][] newWindow = new double[window.length * 2][window[0].length];
-            for (int i = 0; i < window.length; i++) {
-                newWindow[i] = window[i];
-            }
-        }
-        for (int i = 0; i < values.length; i++) {
-            this.window[windowPosition][i] = values[i];
-            sums[i] += values[i];
-        }
-        windowPosition++;
-        if (windowPosition == this.window.length) {
-            windowPosition = 0;
+    public void addValue(int sensor, double value) {
+        analyseIfTimePassed();
+
+        // Double buffer size
+        ensureSpaceInWindow(sensor);
+        window[sensor][pos[sensor]] = value;
+        sums[sensor] += value;
+        pos[sensor]++;
+    }
+
+    private void analyseIfTimePassed() {
+        if (getElapsedTime() > windowDuration) {
             analyseWindow();
+            lastRun = System.nanoTime();
+        }
+    }
+
+    private void ensureSpaceInWindow(int sensor) {
+        if (pos[sensor] >= window[sensor].length) {
+            window[sensor] = Arrays.copyOf(window[sensor], window[sensor].length * 2);
         }
     }
 
     private void analyseWindow() {
         if (analyser != null) {
-            double[] means = new double[sums.length];
-            for (int sensor = 0; sensor < sums.length; sensor++) {
-                means[sensor] = sums[sensor] / values.length;
-            }
+            double[] means = new double[window.length];
             double[] var = new double[means.length];
-            for (int i = 0; i < windowPosition; i++) {
-                for (int sensor = 0; sensor < sums.length; sensor++) {
-                    var[sensor] += Math.pow(values[i][sensor] - means[sensor], 2);
+            double[] sd = new double[means.length];
+
+            for (int sensor = 0; sensor < window.length; sensor++) {
+                if (pos[sensor] > 0) {
+                    means[sensor] = sums[sensor] / pos[sensor];
+                    for (int i = 0; i < pos[sensor]; i++) {
+                        var[sensor] += Math.pow(window[sensor][i] - means[sensor], 2);
+                    }
+                    var[sensor] /= pos[sensor];
+                    sd[sensor] = Math.sqrt(var[sensor]);
                 }
             }
-            double[] sd = new double[means.length];
-            for (int sensor = 0; sensor < sums.length; sensor++) {
-                var[sensor] /= values.length;
-                sd[sensor] = Math.sqrt(var[sensor]);
-                sums[sensor] = 0;
-            }
-            analyser.analyseWindow(new StateWindow(means, sd));
+            analyser.analyseWindow(new CountState(means, sd));
         }
+        resetWindow();
     }
 
+    public long getElapsedTime() {
+        return System.nanoTime() - lastRun;
+    }
 
     public interface WindowAnalyser {
-        void analyseWindow(StateWindow state);
+        void analyseWindow(CountState state);
     }
 
     public void setAnalyser(WindowAnalyser analyser) {

@@ -7,14 +7,12 @@ import com.bitflake.counter.sensors.SensorValueListener;
 import com.bitflake.counter.sensors.WearAccelerationSensor;
 
 public class SensorService extends BroadcastReceiverService implements SensorValueListener {
-    private SlidingWindow window = new SlidingWindow(3, 10);
+    protected SlidingWindow window = new SlidingWindow(3, 10);
     private SensorDataProvider sensor;
 
     @Override
     public void onCreate() {
         super.onCreate();
-//        sensor = new WearAccelerationSensor(this);
-//        sensor.setValueListener(this);
         sensor = new LocalAccelerationSensor(this);
         sensor.setValueListener(this);
     }
@@ -43,6 +41,8 @@ public class SensorService extends BroadcastReceiverService implements SensorVal
 
     @Override
     public void onValueChanged(float[] values) {
-        window.addData(values);
+        for (int sensor = 0; sensor < values.length; sensor++) {
+            window.addValue(sensor, values[sensor]);
+        }
     }
 }
