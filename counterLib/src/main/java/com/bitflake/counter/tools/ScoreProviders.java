@@ -1,21 +1,27 @@
 package com.bitflake.counter.tools;
 
+import com.bitflake.counter.CountState;
 import com.bitflake.counter.Particle;
 import com.bitflake.counter.SensorCounter;
-import com.bitflake.counter.StateWindow;
 
 public class ScoreProviders {
-    public static final RouletteWheelSelection.ScoreProvider<Particle> PARTICLE = new RouletteWheelSelection.ScoreProvider<Particle>() {
+    public static final RouletteWheelSelection.ScoreProvider<Particle> PARTICLE_WEAK = new RouletteWheelSelection.ScoreProvider<Particle>() {
         @Override
         public double getScore(Particle p) {
-            return p.getDistance();
+            return p.getCumulatedError();
         }
     };
-    public static final RouletteWheelSelection.ScoreProvider<StateWindow> STATE = new RouletteWheelSelection.ScoreProvider<StateWindow>() {
+    public static final RouletteWheelSelection.ScoreProvider<Particle> PARTICLE_STRONG = new RouletteWheelSelection.ScoreProvider<Particle>() {
         @Override
-        public double getScore(StateWindow s) {
+        public double getScore(Particle p) {
+            return 1 / (1 + p.getCumulatedError());
+        }
+    };
+    public static final RouletteWheelSelection.ScoreProvider<CountState> STATE = new RouletteWheelSelection.ScoreProvider<CountState>() {
+        @Override
+        public double getScore(CountState s) {
             // 0.00001: To avoid zero scores
-            return 0.00001 + s.getScore() * (1 + s.getParticleCount() / SensorCounter.PARTICLE_COUNT);//
+            return Math.exp(s.getDistance());//
         }
     };
 }

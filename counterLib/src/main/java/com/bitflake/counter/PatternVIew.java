@@ -1,5 +1,7 @@
 package com.bitflake.counter;
 
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -9,6 +11,7 @@ import android.graphics.Canvas;
 import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PointF;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.AttributeSet;
@@ -16,14 +19,18 @@ import android.view.View;
 
 import com.bitflake.counter.services.CountConstants;
 
+import java.util.List;
+
 public class PatternView extends View {
     private Paint paintScore;
     private Paint paintParticles;
-    private Path path;
+    private Path pathParticles;
+    private Path pathScores;
     private double maxScore;
     private double maxParticles;
     private float[] particleCount;
     private float[] stateScores;
+    private float density;
 
     public PatternView(Context context) {
         super(context);
@@ -45,22 +52,26 @@ public class PatternView extends View {
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        float strokeWith = getResources().getDisplayMetrics().density * 4;
+        this.density = getResources().getDisplayMetrics().density;
+        float strokeWith = density * 4;
         paintScore = new Paint();
         paintScore.setColor(getResources().getColor(R.color.colorPrimary));
-        paintScore.setStyle(Paint.Style.STROKE);
+        paintScore.setStyle(Paint.Style.FILL);
         paintScore.setStrokeCap(Paint.Cap.ROUND);
+        paintScore.setPathEffect(new CornerPathEffect(strokeWith * 10));   // set the pathParticles effect when they join.
         paintScore.setStrokeWidth(strokeWith);
+
 
         paintParticles = new Paint();
         paintParticles.setAntiAlias(true);
         paintParticles.setColor(getResources().getColor(R.color.colorAccent));
         paintParticles.setStrokeJoin(Paint.Join.ROUND);    // set the join to round you want
-        paintParticles.setPathEffect(new CornerPathEffect(strokeWith * 10));   // set the path effect when they join.
+        paintParticles.setPathEffect(new CornerPathEffect(strokeWith * 10));   // set the pathParticles effect when they join.
         paintParticles.setStyle(Paint.Style.STROKE);
         paintParticles.setStrokeCap(Paint.Cap.ROUND);
         paintParticles.setStrokeWidth(strokeWith);
-        path = new Path();
+        pathParticles = new Path();
+        pathScores = new Path();
         getContext().registerReceiver(receiver, new IntentFilter(Constances.INTENT_COUNT_PROGRESS));
     }
 
@@ -83,10 +94,17 @@ public class PatternView extends View {
 
             int w = getWidth() / particleCount.length;
             int h = getHeight();
-            path.reset();
+            pathParticles.reset();
+            pathParticles.moveTo(0, getHeight());
+
+            pathScores.reset();
+            pathScores.moveTo(0, getHeight());
+            pathScores.lineTo(0, getHeight());
             for (int i = 0; i < particleCount.length; i++) {
                 double pScore = stateScores[i] / maxScore;
-                canvas.drawLine(i * w + w / 2, (int) (h - pScore * h), i * w + w / 2, h, paintScore);
+//                canvas.drawLine(i * w + w / 2, (int) (h - pScore * h), i * w + w / 2, h, paintScore);
+
+                pathScores.lineTo(i * w + w / 2, (int) (h - pScore * h));
 //                canvas.drawCircle(i * w + w / 2, (int) (h - pScore * h), paintParticles.getStrokeWidth() * 3
 //                        , paintParticles);
 
@@ -95,22 +113,20 @@ public class PatternView extends View {
 //                canvas.drawCircle(i * w + w / 2, (int) (h - pParticle * h), paintParticles.getStrokeWidth() * 2
 //                        , paintParticles);
                 paintParticles.setStyle(Paint.Style.STROKE);
-                if (i == 0)
-                    path.moveTo(i * w + w / 2, (int) (h - pParticle * h));
-                else
-                    path.lineTo(i * w + w / 2, (int) (h - pParticle * h));
+                pathParticles.lineTo(i * w + w / 2, (int) (h - pParticle * h));
             }
-            canvas.drawPath(path, paintParticles);
+            pathScores.lineTo(getWidth(), getHeight());
+            pathScores.lineTo(getWidth(), getHeight());
+            pathParticles.lineTo(getWidth(), getHeight());
+            pathScores.close();
+            canvas.drawPath(pathScores, paintScore);
+            canvas.drawPath(pathParticles, paintParticles);
         }
-    }
 
-    public void setStats(float[] particleCount, float[] stateScores) {
-        this.particleCount = particleCount;
-        this.stateScores = stateScores;
-        invalidate();
     }
 
     public BroadcastReceiver receiver = new BroadcastReceiver() {
+
         @Override
         public void onReceive(Context context, Intent intent) {
             Bundle data = intent.getExtras();

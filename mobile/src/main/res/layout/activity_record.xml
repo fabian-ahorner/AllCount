@@ -1,108 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:picker="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:animateLayoutChanges="true"
-    android:background="#212121"
     android:fitsSystemWindows="true"
     android:orientation="vertical"
-    tools:context="com.bitflake.allcount.WearCountActivity">
+    tools:context=".RecordActivityBak">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <LinearLayout
-            android:id="@+id/recordSettings"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_above="@+id/fab"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <!--picker:dividerSize="64dip"-->
-            <com.bitflake.counter.HorizontalPicker
-                android:id="@+id/pickerDelay"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/textColour"
-                android:textSize="64sp"
-                picker:sideItems="1"
-                picker:values="@array/record_delays" />
-            <!--picker:dividerSize="@dimen/itemPadding"-->
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="32dip"
-                android:gravity="center"
-                android:text="@string/record_delay"
-                android:textColor="#FFF"
-                android:textSize="24sp" />
-
-            <!--picker:dividerSize="64dip"-->
-            <com.bitflake.counter.HorizontalPicker
-                android:id="@+id/pickerDuration"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/textColour"
-                android:textSize="64sp"
-                picker:sideItems="1"
-                picker:values="@array/record_durations" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="@string/record_duration"
-                android:textColor="#FFF"
-                android:textSize="24sp" />
-
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/tStatus"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_above="@+id/fab"
-            android:gravity="center"
-            android:textColor="@color/textColour"
-            android:textSize="32sp"
-            android:visibility="invisible"
-            tools:text="Recording" />
-
-
         <View
             android:id="@+id/progress"
             android:layout_width="match_parent"
-            android:layout_height="128dip"
+            android:layout_height="match_parent"
             android:layout_alignParentBottom="true"
+            android:background="@color/colorPrimary"
+            android:visibility="invisible" />
+
+        <com.bitflake.counter.StateView
+            android:id="@+id/stillness"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@+id/tStatus1"
             android:background="@color/colorPrimary" />
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <com.bitflake.counter.StateView
+            android:id="@+id/patternView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@+id/tStatus1" />
+
+
+        <TextView
+            android:id="@+id/tStatus1"
+            android:layout_width="match_parent"
+            android:layout_height="128dip"
             android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
-            android:layout_margin="32dip"
-            android:src="@android:drawable/ic_media_play" />
+            android:background="@color/colorPrimary"
+            android:gravity="center"
+            android:padding="16dip"
+            android:text="@string/start_calibrating_long"
+            android:textAppearance="?android:textAppearanceLarge" />
+
+        <TextView
+            android:id="@+id/tStatus2"
+            android:layout_width="match_parent"
+            android:layout_height="128dip"
+            android:layout_alignParentBottom="true"
+            android:background="@color/colorPrimary"
+            android:gravity="center"
+            android:padding="16dip"
+            android:text="@string/start_calibrating_long"
+            android:textAppearance="?android:textAppearanceLarge" />
 
         <ImageButton
             android:id="@+id/skip"
             android:layout_width="64dip"
-            android:layout_height="match_parent"
-            android:layout_alignBottom="@+id/fab"
-            android:layout_alignTop="@+id/fab"
-            android:layout_gravity="bottom|end"
-            android:layout_toEndOf="@+id/fab"
-            android:layout_toRightOf="@+id/fab"
+            android:layout_height="64dip"
+            android:layout_above="@+id/tStatus1"
+            android:layout_centerHorizontal="true"
             android:background="?android:selectableItemBackground"
             android:src="@android:drawable/ic_media_next" />
-
     </RelativeLayout>
 </android.support.design.widget.CoordinatorLayout>
-
-

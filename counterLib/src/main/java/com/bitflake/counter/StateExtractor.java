@@ -12,16 +12,16 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
     /**
      * The most similar states are stored first
      */
-    private Comparator<StateWindow> mergeComparator = new Comparator<StateWindow>() {
+    private Comparator<CountState> mergeComparator = new Comparator<CountState>() {
         @Override
-        public int compare(StateWindow lhs, StateWindow rhs) {
+        public int compare(CountState lhs, CountState rhs) {
             return Double.compare(lhs.getDistanceToNext(), rhs.getDistanceToNext());
         }
     };
-    private PriorityQueue<StateWindow> mergeList = new PriorityQueue<>(20, mergeComparator);
-    private List<StateWindow> states = new ArrayList<>();
-    private StateWindow lastState;
-    private double distSumm;
+    private PriorityQueue<CountState> mergeList = new PriorityQueue<>(20, mergeComparator);
+    private List<CountState> states = new ArrayList<>();
+    private CountState lastState;
+    private double distSum;
     private int lastStateId;
 
     public StateExtractor() {
@@ -32,21 +32,70 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
         states.clear();
         mergeList.clear();
         lastState = null;
-        distSumm = 0;
+        distSum = 0;
         lastStateId = 0;
     }
 
     @Override
-    public void analyseWindow(StateWindow state) {
+    public void analyseWindow(CountState state) {
         state.setId(lastStateId++);
         states.add(state);
+
+        checkIfStill();
+
         if (lastState != null) {
             lastState.setNext(state);
             mergeList.add(lastState);
-            distSumm += lastState.getDistanceToNext();
+            distSum += lastState.getDistanceToNext();
         }
         lastState = state;
-//        this.activity.addState(state);
+    }
+
+    private void checkIfStill() {
+        if (states.size() > 20) {
+            double[] minOfMax = new double[3];
+            double[] maxOfMax = new double[3];
+            double[] minOfMin = new double[3];
+            double[] maxOfMin = new double[3];
+            boolean isStill = true;
+            boolean isInitialised = false;
+            for (int iS = states.size() - 20; iS < states.size() && isStill; iS++) {
+                CountState s = states.get(iS);
+                for (int sensor = 0; sensor < s.means.length && isStill; sensor++) {
+                    double min = s.means[sensor] - s.sd[sensor] * 2.5;
+                    double max = s.means[sensor] + s.sd[sensor] * 2.5;
+
+                    if (isInitialised) {
+                        minOfMin[sensor] = Math.min(minOfMin[sensor], min);
+                        maxOfMin[sensor] = Math.max(maxOfMin[sensor], min);
+                        minOfMax[sensor] = Math.min(minOfMax[sensor], max);
+                        maxOfMax[sensor] = Math.max(maxOfMax[sensor], max);
+                        double overlap = minOfMax[sensor] - maxOfMin[sensor];
+                        double maxDistance = maxOfMax[sensor] - minOfMin[sensor];
+                        isStill &= overlap > 0 && maxDistance < overlap * 30;
+                    } else {
+                        minOfMin[sensor] = min;
+                        maxOfMin[sensor] = min;
+                        minOfMax[sensor] = max;
+                        maxOfMax[sensor] = max;
+                    }
+                }
+                isInitialised = true;
+            }
+            String log = "";
+            for (int sensor = 0; sensor < maxOfMax.length; sensor++) {
+                double overlap = minOfMax[sensor] - maxOfMin[sensor];
+                double maxDistance = maxOfMax[sensor] - minOfMin[sensor];
+                log += String.format("%10.2f", maxDistance / overlap);
+            }
+            Log.d("my", log + "    " + (isStill ? "------------" : "+++++++"));
+            if (isStill)
+                startRecording();
+        }
+    }
+
+    private void startRecording() {
+        Log.d("my", "--------------is still");
     }
 
     /**
@@ -55,10 +104,10 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
     public void compressStates() {
         double minDistance = computeSimilarityBoundary();
         int stateCount = states.size();
-        while (mergeList.peek().getDistanceToNext() < minDistance && mergeList.size() > 1) {
-            StateWindow state = mergeList.poll();
+        while (mergeList.size() > 1 && mergeList.peek().getDistanceToNext() < minDistance) {
+            CountState state = mergeList.poll();
             //Check if state was already merged
-            StateWindow toMerge = state.getNext();
+            CountState toMerge = state.getNext();
             state.setNext(toMerge.getNext());
             states.remove(toMerge);
             mergeList.remove(toMerge);
@@ -66,7 +115,7 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
                 mergeList.add(state);
         }
         Log.d("bitflake", "Remaining states:" + states.size() + "/" + stateCount + "(Boundary=" + minDistance + ")");
-        for (StateWindow s :
+        for (CountState s :
                 states) {
             Log.d("bitflake", s.toString());
         }
@@ -78,9 +127,9 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
      * @return
      */
     private double computeSimilarityBoundary() {
-        double distMean = distSumm / mergeList.size();
+        double distMean = distSum / mergeList.size();
         double sd = 0;
-        for (StateWindow s :
+        for (CountState s :
                 states) {
             if (s.getNext() != null)
                 sd += Math.pow(s.getDistanceToNext() - distMean, 2);
@@ -88,32 +137,7 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
         return distMean + Math.sqrt(sd / mergeList.size());
     }
 
-    public List<StateWindow> getStates() {
+    public List<CountState> getStates() {
         return states;
     }
-
-//    public void extractFeatures() {
-//        int sensorCount = dataManager.getSensorCount();
-//        DataInputStream[] is = new DataInputStream[sensorCount];
-//        double[][] window = new double[windowSize][sensorCount];
-//        double[] sum = new double[sensorCount];
-//        for (int i = 0; i < sensorCount; i++) {
-//            is[i] = dataManager.openSensorInputStream(i);
-//        }
-//        try {
-//            int w = 0;
-//            while (is[0].available()>0) {
-//                for (int i = 0; i < sensorCount; i++) {
-//                    window[w][i] = is[i].readDouble();
-//                    sum[i] += window[w][i];
-//                }
-//                w++;
-//                if (w >= windowSize) {
-//                    w = 0;
-//                }
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
 }

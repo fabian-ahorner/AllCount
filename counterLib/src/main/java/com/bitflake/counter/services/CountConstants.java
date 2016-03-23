@@ -1,6 +1,6 @@
 package com.bitflake.counter.services;
 
-public interface CountConstants {
+public interface CountConstants extends SensorConstants {
     String WEAR_STATUS_PATH = "/count/status";
 
     String CMD_START_COUNTING = "startCounting";
@@ -19,6 +19,7 @@ public interface CountConstants {
     String DATA_COUNT_PROGRESS = "countProgress";
     String DATA_PARTICLE_COUNT = "particleCount";
     String DATA_STATE_SCORES = "stateScores";
+    String DATA_MOST_LIKELY_STATE = "mostLikelyState";
     String DATA_COUNT = "countNr";
     String DATA_IS_COUNTING = "isCounting";
     String DATA_COUNT_OFFSET = "countOffset";

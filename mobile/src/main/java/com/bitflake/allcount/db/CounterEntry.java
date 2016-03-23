@@ -1,6 +1,6 @@
 package com.bitflake.allcount.db;
 
-import com.bitflake.counter.StateWindow;
+import com.bitflake.counter.CountState;
 import com.orm.SugarRecord;
 
 import java.util.List;
@@ -13,17 +13,17 @@ public class CounterEntry extends SugarRecord {
     public CounterEntry() {
     }
 
-    public CounterEntry(String name, List<StateWindow> states) {
+    public CounterEntry(String name, List<CountState> states) {
         this.name = name;
-        data = StateWindow.toJSON(states);
+        data = CountState.toJSON(states);
     }
     public CounterEntry(String name, String states) {
         this.name = name;
         data = states;
     }
 
-    public List<StateWindow> getStates() {
-        return StateWindow.fromJSON(data);
+    public List<CountState> getStates() {
+        return CountState.fromJSON(data);
     }
 
     public String getName() {

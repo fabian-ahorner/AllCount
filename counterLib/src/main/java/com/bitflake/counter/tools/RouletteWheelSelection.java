@@ -1,5 +1,6 @@
 package com.bitflake.counter.tools;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class RouletteWheelSelection<T> {
@@ -7,6 +8,21 @@ public class RouletteWheelSelection<T> {
     private double total;
     private int from;
     private int to;
+
+    public void removeElement(T e) {
+        elements.remove(e);
+        total -= scoreProvider.getScore(e);
+        if (to > elements.size())
+            to = elements.size();
+    }
+
+    public double getTotal() {
+        return total;
+    }
+
+    public double getAverage() {
+        return total / elements.size();
+    }
 
     public interface ScoreProvider<T> {
         double getScore(T element);
@@ -31,6 +47,8 @@ public class RouletteWheelSelection<T> {
         int i = pickElementIndex();
         T el = elements.remove(i);
         total -= scoreProvider.getScore(el);
+        if (to > elements.size())
+            to = elements.size();
         return el;
     }
 
@@ -55,7 +73,7 @@ public class RouletteWheelSelection<T> {
                 return i;
             }
         }
-        throw new AssertionError("Dead code");
+        return to - 1;
     }
 
     private double getTotal(int from, int to) {
@@ -109,7 +127,7 @@ public class RouletteWheelSelection<T> {
     }
 
     public void setElements(List<T> elements) {
-        this.elements = elements;
+        this.elements = new ArrayList<>(elements);
         this.from = 0;
         this.to = elements.size();
         notifyValuesChanged();

@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -17,7 +18,8 @@ import com.bitflake.allcount.db.CounterEntry;
 import com.bitflake.counter.Constances;
 import com.bitflake.counter.PatternView;
 import com.bitflake.counter.ServiceConnectedActivity;
-import com.bitflake.counter.StateWindow;
+import com.bitflake.counter.CountState;
+import com.bitflake.counter.StateView;
 import com.bitflake.counter.services.CountConstants;
 import com.bitflake.counter.services.WearCountService;
 import com.bitflake.counter.services.CountServiceHelper;
@@ -36,7 +38,7 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
     private boolean isCounting;
     private Bundle states;
     private int countOffset;
-    private PatternView patternView;
+    private StateView patternView;
     private CountServiceHelper countServiceHelper;
     private View bReset;
 
@@ -44,11 +46,20 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
     private long stateId;
     private CounterEntry counterEntry;
     private EditText counterName;
+    private boolean hasPressedBack;
+    private Snackbar snack;
 
     public static Intent getStartIntent(Context context, Bundle states, boolean start, int count) {
         Intent i = new Intent(context, CountActivity.class);
         i.putExtra(EXTRA_START, start);
         i.putExtra(EXTRA_COUNT_OFFSET, count);
+        i.putExtra(EXTRA_STATES, states);
+        return i;
+    }
+
+    public static Intent getStartIntent(Context context, Bundle states, Long id) {
+        Intent i = new Intent(context, CountActivity.class);
+        i.putExtra(EXTRA_STATES_ID, id);
         i.putExtra(EXTRA_STATES, states);
         return i;
     }
@@ -99,18 +110,23 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
             }
         });
         pCountProgress = findViewById(R.id.progress);
-        patternView = (PatternView) findViewById(R.id.patternView);
+        patternView = (StateView) findViewById(R.id.patternView);
 
         states = getIntent().getBundleExtra(EXTRA_STATES);
         stateId = getIntent().getLongExtra(EXTRA_STATES_ID, -1);
-        if (states == null) {
+
+        if (stateId != -1)
             counterEntry = CounterEntry.findById(CounterEntry.class, stateId);
-            this.states = StateWindow.toBundle(counterEntry.getStates());
+
+        if (states == null) {
+            this.states = CountState.toBundle(counterEntry.getStates());
         }
 
         if (counterEntry != null) {
             counterName.setText(counterEntry.getName());
         }
+        patternView.setStates(CountState.fromBundles(states));
+        patternView.listenToCounter();
 
         countOffset = getIntent().getIntExtra(EXTRA_COUNT_OFFSET, 0);
         tCount.setText(String.valueOf(countOffset));
@@ -128,10 +144,17 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
     }
 
     private void saveCounter() {
+        String newName = counterName.getText().toString();
         if (counterEntry == null) {
-            counterEntry = new CounterEntry(counterName.getText().toString(), states.getString("data"));
+            counterEntry = new CounterEntry(newName, states.getString("data"));
         } else {
-            counterEntry.setName(counterName.getText().toString());
+            if (newName.length() > 0) {
+                counterEntry.setName(newName);
+            } else {
+                counterEntry.delete();
+                counterEntry = null;
+                return;
+            }
         }
         counterEntry.save();
     }
@@ -149,11 +172,6 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
         tCount.setText("0");
         bReset.setVisibility(View.INVISIBLE);
         countOffset = 0;
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
     }
 
     @Override
@@ -199,7 +217,7 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
             String event = data.getString(DATA_EVENT_TYPE);
             switch (event) {
                 case EVENT_STATUS:
-                    states = data.getBundle(DATA_STATES);
+//                    states = data.getBundle(DATA_STATES);
                 case EVENT_START_COUNTING:
                 case EVENT_STOP_COUNTING:
                     setCountProgress(0);
@@ -210,15 +228,34 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
 
     };
 
-
     public void setCountProgress(float progress) {
-        pCountProgress.setTranslationX(-(1 - progress) * pCountProgress.getWidth());
+//        pCountProgress.setTranslationX(-(1 - progress) * pCountProgress.getWidth());
     }
 
+    @SuppressWarnings("WrongConstant")
     @Override
     public void onBackPressed() {
 //        if (isCounting)
 //            toggleCounting();
-        super.onBackPressed();
+
+        if (hasPressedBack || counterEntry != null) {
+            super.onBackPressed();
+            countServiceHelper.stopCounting();
+        } else {
+            hasPressedBack = true;
+            snack = Snackbar
+                    .make(tCount, R.string.delede_counter_warning, Snackbar.LENGTH_INDEFINITE);
+            snack.setDuration(5000);
+            snack.show();
+//            tCount.postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    snack.dismiss();
+//                    snack = null;
+//                }
+//            }, 6000);
+        }
     }
+
+
 }

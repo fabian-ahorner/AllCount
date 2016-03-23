@@ -34,7 +34,7 @@ public class VoiceFeedbackService extends Service implements TextToSpeech.OnInit
                 .getSystemService(NOTIFICATION_SERVICE);
         startTalking();
         registerReceiver(countReceiver, new IntentFilter(Constances.INTENT_COUNT_STATUS));
-        registerReceiver(recordReceiver, new IntentFilter(Constances.INTENT_RECORD_STATUS));
+        registerReceiver(recordReceiver, new IntentFilter(RecordConstants.INTENT_RECORD_STATUS));
     }
 
     @Override
@@ -57,11 +57,14 @@ public class VoiceFeedbackService extends Service implements TextToSpeech.OnInit
                 case EVENT_START_DELAY:
                     speak(R.string.get_ready);
                     break;
-                case EVENT_START_RECORDING:
-                    speak(R.string.start_recording);
+                case EVENT_START_CALIBRATING:
+                    speak(R.string.start_calibrating);
                     break;
                 case EVENT_FINISHED_RECORDING:
                     speak(R.string.stop_recording);
+                    break;
+                case EVENT_START_MOVING:
+                    speak(R.string.start_recording);
                     break;
             }
         }

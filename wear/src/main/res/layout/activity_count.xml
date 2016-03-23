@@ -7,8 +7,7 @@
     android:animateLayoutChanges="true"
     android:background="#212121"
     android:fitsSystemWindows="true"
-    android:orientation="vertical"
-    tools:context="com.bitflake.allcount.RecordCountActivity">
+    android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/recordSettings"
