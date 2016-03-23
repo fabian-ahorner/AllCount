@@ -1,7 +1,5 @@
 package com.bitflake.counter;
 
-import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -11,15 +9,12 @@ import android.graphics.Canvas;
 import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.PointF;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.View;
 
 import com.bitflake.counter.services.CountConstants;
-
-import java.util.List;
 
 public class PatternView extends View {
     private Paint paintScore;
