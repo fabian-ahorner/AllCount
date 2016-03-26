@@ -33,4 +33,12 @@ public class CounterEntry extends SugarRecord {
     public void setName(String name) {
         this.name = name;
     }
+
+    public long getLastUsed() {
+        return 0l;
+    }
+
+    public void touch() {
+
+    }
 }

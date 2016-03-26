@@ -20,5 +20,4 @@ public class MainApplication extends MultiDexApplication {
         super.onTerminate();
         SugarContext.terminate();
     }
-
 }

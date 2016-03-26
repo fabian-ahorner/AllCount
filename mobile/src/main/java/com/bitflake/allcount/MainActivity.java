@@ -55,9 +55,9 @@ public class MainActivity extends ServiceConnectedActivity implements View.OnCli
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.fab:
-                startActivity(new Intent(this, RecordActivity.class));
-                startService(new Intent(this, WearCountService.class));
                 new RecordServiceHelper(this).startRecording(getDelay(), getDuration());
+                startService(new Intent(this, WearCountService.class));
+                startActivity(new Intent(this, RecordActivity.class));
         }
     }
 

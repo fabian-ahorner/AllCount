@@ -16,6 +16,7 @@ public class CountService extends SensorService implements SensorCounter.CountLi
     private float[] stateScores;
     protected int countOffset;
     protected Bundle currentStates;
+    private long counterId = -1;
 
     @Override
     public void onCreate() {
@@ -70,6 +71,7 @@ public class CountService extends SensorService implements SensorCounter.CountLi
         window.resetWindow();
         counter.reset();
         countOffset = data.getInt(DATA_COUNT_OFFSET);
+        counterId = data.getLong(DATA_STATES_ID, -1);
         statusBundle.putInt(DATA_COUNT, countOffset);
         broadcastStatus(EVENT_START_COUNTING);
         startListening();
@@ -93,7 +95,7 @@ public class CountService extends SensorService implements SensorCounter.CountLi
     }
 
     @Override
-    public void onCountProgress(float progress,int mostLikelyState) {
+    public void onCountProgress(float progress, int mostLikelyState) {
         Intent i = new Intent(Constances.INTENT_COUNT_PROGRESS);
         i.putExtra(DATA_COUNT_PROGRESS, progress);
         particleCounts = counter.getParticleCounts(particleCounts);
@@ -117,6 +119,8 @@ public class CountService extends SensorService implements SensorCounter.CountLi
         i.putExtras(statusBundle);
         i.putExtra(DATA_EVENT_TYPE, EVENT_STATUS);
         i.putExtra(DATA_STATES, currentStates);
+        if (counterId >= 0)
+            i.putExtra(DATA_STATES_ID, counterId);
         sendBroadcast(i);
     }
 

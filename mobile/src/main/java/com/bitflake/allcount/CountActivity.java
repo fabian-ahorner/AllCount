@@ -193,7 +193,11 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
             countServiceHelper.stopCounting();
             fab.setImageResource(android.R.drawable.ic_media_play);
         } else {
-            countServiceHelper.startCounting(states, countOffset);
+            if (counterEntry == null) {
+                countServiceHelper.startCounting(states, countOffset);
+            } else {
+                countServiceHelper.startCounting(states, counterEntry.getId(), countOffset);
+            }
             countOffset = 0;
             fab.setImageResource(android.R.drawable.ic_media_pause);
             startService(new Intent(this, VoiceFeedbackService.class));
@@ -217,10 +221,12 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
             String event = data.getString(DATA_EVENT_TYPE);
             switch (event) {
                 case EVENT_STATUS:
+                    if (data.containsKey(DATA_STATES_ID)) {
+                        long counterId = data.getLong(DATA_STATES_ID);
+                        counterEntry = CounterEntry.findById(CounterEntry.class, counterId);
+                        counterName.setText(counterEntry.getName());
+                    }
 //                    states = data.getBundle(DATA_STATES);
-                case EVENT_START_COUNTING:
-                case EVENT_STOP_COUNTING:
-                    setCountProgress(0);
                     break;
                 default:
             }
@@ -228,9 +234,6 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
 
     };
 
-    public void setCountProgress(float progress) {
-//        pCountProgress.setTranslationX(-(1 - progress) * pCountProgress.getWidth());
-    }
 
     @SuppressWarnings("WrongConstant")
     @Override

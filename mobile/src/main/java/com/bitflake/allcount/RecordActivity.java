@@ -12,6 +12,8 @@ import android.widget.TextView;
 import com.bitflake.counter.HorizontalPicker;
 import com.bitflake.counter.ServiceConnectedActivity;
 import com.bitflake.counter.StateView;
+import com.bitflake.counter.services.CountConstants;
+import com.bitflake.counter.services.CountServiceHelper;
 import com.bitflake.counter.services.RecordConstants;
 import com.bitflake.counter.services.RecordServiceHelper;
 import com.bitflake.counter.services.WearRecordService;
@@ -52,20 +54,20 @@ public class RecordActivity extends ServiceConnectedActivity implements RecordCo
         startService(new Intent(this, WearRecordService.class));
         ensureConnection(VoiceFeedbackService.class);
         ensureConnection(WearRecordService.class);
+        recordHelper.enableEventListener(this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         recordHelper.requestUpdate();
-        recordHelper.enableEventListener(this);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        recordHelper.disableEventListener();
     }
+
 
     @Override
     public void onStatusReceived(Bundle data) {
@@ -81,7 +83,17 @@ public class RecordActivity extends ServiceConnectedActivity implements RecordCo
     }
 
     public void onFinishedRecording(Bundle data) {
-        useStates(data.getBundle(DATA_STATES));
+        Bundle states = data.getBundle(DATA_STATES);
+        new CountServiceHelper(this).startCounting(states, 1);
+
+        Intent i = new Intent(this, MobileCountService.class);//createControlIntent();//
+        i.putExtra(CountConstants.DATA_COMMAND, CountConstants.CMD_START_COUNTING);
+        i.putExtra(CountConstants.DATA_STATES, states);
+        i.putExtra(CountConstants.DATA_COUNT_OFFSET, 1);
+        startService(i);
+
+        Intent intent = CountActivity.getStartIntent(this, states, true, 1);
+        startActivity(intent);
         finish();
     }
 
@@ -128,11 +140,6 @@ public class RecordActivity extends ServiceConnectedActivity implements RecordCo
         recordHelper.skipState();
     }
 
-    private void useStates(Bundle states) {
-        Intent intent = CountActivity.getStartIntent(this, states, true, 1);
-        startActivity(intent);
-    }
-
     public void resetUI() {
         bSkip.setVisibility(View.INVISIBLE);
         setProgressBar(0);
@@ -156,6 +163,7 @@ public class RecordActivity extends ServiceConnectedActivity implements RecordCo
     protected void onDestroy() {
         super.onDestroy();
         recordHelper.stopRecording();
+        recordHelper.disableEventListener();
         unregisterReceiver(stillHelper);
     }
 }

@@ -130,7 +130,7 @@ public class NotificationReceiver extends WearBroadcastProxyService {
     }
 
     public NotificationCompat.Action getRecordAction(String command, int icon, String title) {
-        Intent actionIntentPause = new Intent(Constances.INTENT_RECORD_CONTROL);
+        Intent actionIntentPause = new Intent(RecordConstants.INTENT_RECORD_CONTROL);
         actionIntentPause.putExtra(RecordConstants.DATA_COMMAND, command);
         PendingIntent actionPendingIntent =
                 PendingIntent.getBroadcast(this, 0, actionIntentPause,

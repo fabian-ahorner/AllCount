@@ -24,7 +24,7 @@ public class Particle {
             double d1 = state.getDistance();
             double d2 = state.getNext().getDistance();
 //            if (d2 < d1 || Math.random() > 0.95) {
-            if (Math.random() > Stats.sigmoidal((d1 - d2) * 15)) {
+            if (d2 < 1 && Math.random() > Stats.sigmoidal((d1 - d2) * 15)) {
                 state.removeParticle();
                 this.state = state.getNext();
                 state.addParticle();

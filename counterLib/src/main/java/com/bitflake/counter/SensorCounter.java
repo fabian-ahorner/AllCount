@@ -23,6 +23,7 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
     private Particle bestParticle;
     private double bestCumulatedError;
     private double worstCumulatedError;
+
     public SensorCounter() {
     }
 
@@ -102,7 +103,7 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
         particleSelector.notifyValuesChanged();
 
         Particle worst = null;
-        for (int i = 0; i < particles.size() / 8; i++) {
+        for (int i = 0; i < particles.size() / 4; i++) {
             Particle weak = weakParticleSelector.pickAndRemoveElement();
             Particle strong = getStrongParticle();
             weak.learnFrom(strong);
@@ -118,7 +119,7 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
             weak.setCumulatedError(worstCumulatedError);
             particleSelector.addElement(weak);
         }
-        startParticle.setCumulatedError(Math.min(weakParticleSelector.getAverage(), startParticle.getCumulatedError()));
+        startParticle.setCumulatedError(Math.min(bestParticle.getCumulatedError(), startParticle.getCumulatedError()));
     }
 
     private void resetParticles() {

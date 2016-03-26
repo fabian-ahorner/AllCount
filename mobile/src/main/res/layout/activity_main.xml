@@ -16,7 +16,8 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:layout_scrollFlags="snap" />
+            android:gravity="center"
+            app:layout_scrollFlags="enterAlways|scroll" />
 
     </android.support.design.widget.AppBarLayout>
 
@@ -26,7 +27,6 @@
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:paddingBottom="8dip"
-        android:paddingTop="8dip"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
     <!--<android.support.v4.widget.NestedScrollView-->
     <!--android:layout_width="match_parent"-->
@@ -122,6 +122,4 @@
             </LinearLayout>
         </android.support.design.widget.CollapsingToolbarLayout>
     </android.support.design.widget.AppBarLayout>
-
-
 </android.support.design.widget.CoordinatorLayout>

@@ -11,14 +11,40 @@ import com.bitflake.allcount.db.CounterEntry;
 import com.bitflake.counter.CountState;
 import com.bitflake.counter.StateView;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 public class CounterAdapter extends RecyclerView.Adapter<CounterAdapter.ViewHolder> {
     private List<CounterEntry> counters;
+    private CounterEntry[] lastUsedCounters;
+    private Comparator<CounterEntry> lastUsedComparator = new Comparator<CounterEntry>() {
+        @Override
+        public int compare(CounterEntry lhs, CounterEntry rhs) {
+            return (int) (lhs.getLastUsed() - rhs.getLastUsed());
+        }
+    };
 
     public void setCounters(List<CounterEntry> counters) {
         this.counters = counters;
+        extractLastUsedCounters();
         notifyDataSetChanged();
+    }
+
+    private void extractLastUsedCounters() {
+        this.lastUsedCounters = new CounterEntry[Math.min(3, counters.size() / 3)];
+        if (lastUsedCounters.length > 0) {
+            int lastCounter = -1;
+            for (int i = 0; i < counters.size(); i++) {
+                CounterEntry counter = counters.get(i);
+                if (lastCounter < lastUsedCounters.length - 1) {
+                    lastUsedCounters[++lastCounter] = counter;
+                } else if (counter.getLastUsed() > lastUsedCounters[lastCounter].getLastUsed()) {
+                    lastUsedCounters[++lastCounter] = counter;
+                    Arrays.sort(lastUsedCounters, lastUsedComparator);
+                }
+            }
+        }
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -33,14 +59,20 @@ public class CounterAdapter extends RecyclerView.Adapter<CounterAdapter.ViewHold
             v.setOnClickListener(this);
         }
 
-        public void bind(CounterEntry counter) {
+        public void bind(CounterEntry counter, boolean isLastUsed) {
             this.counter = counter;
             text.setText(counter.getName());
             vis.setStates(counter.getStates());
+            if (isLastUsed) {
+                itemView.setBackgroundResource(R.color.colorPrimary);
+            } else {
+                itemView.setBackgroundResource(0);
+            }
         }
 
         @Override
         public void onClick(View v) {
+            counter.touch();
             Intent i = CountActivity.getStartIntent(v.getContext(), CountState.toBundle(counter.getStates()), counter.getId());
             v.getContext().startActivity(i);
         }
@@ -59,11 +91,15 @@ public class CounterAdapter extends RecyclerView.Adapter<CounterAdapter.ViewHold
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.bind(counters.get(position));
+        if (position >= lastUsedCounters.length) {
+            holder.bind(counters.get(position - lastUsedCounters.length), false);
+        } else {
+            holder.bind(lastUsedCounters[position], true);
+        }
     }
 
     @Override
     public int getItemCount() {
-        return counters == null ? 0 : counters.size();
+        return counters == null ? 0 : counters.size() + lastUsedCounters.length;
     }
 }

@@ -19,6 +19,7 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
     private double[] startMax;
     private double[] errors = new double[3];
     private boolean wasStartingPos;
+    private int statesObserved;
 
     public EventExtractor(SlidingWindow.WindowAnalyser delegate, RecordingStatusListener listener) {
         this.delegate = delegate;
@@ -34,6 +35,7 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
     @Override
     public void analyseWindow(CountState state) {
         states.add(state);
+        statesObserved++;
         float stillness = isStill();
         boolean isStill = stillness >= 1;
         if (wasStill || isStill) {
@@ -42,11 +44,12 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
                 startMax = Arrays.copyOf(maxOfMax, maxOfMax.length);
                 listener.onIsStill(1);
                 listener.onStartRecording(startMin, startMax);
+//                states.clear();
             }
             delegate.analyseWindow(state);
             listener.onNewState(state);
             wasStill = true;
-            if (hasMoved && isStartingPos(state)) {
+            if (hasMoved && statesObserved > 10 && isStartingPos(state)) {
                 wasStartingPos = true;
                 if (isStill) {
                     states.clear();
@@ -56,6 +59,7 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
                 }
             } else if (!hasMoved && !isStill) {
                 hasMoved = true;
+                statesObserved = 0;
             } else if (wasStartingPos) {
                 listener.onIsStill(1);
                 wasStartingPos = false;
@@ -78,7 +82,7 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
             errors[sensor] = (m - avg) / maxMargin;
             isStart &= Math.abs(m - avg) < maxMargin;
         }
-        Log.d("my", Arrays.toString(errors) + (isStart ? "ooooooooooo" : "xxxxxxxxxx"));
+//        Log.d("my", Arrays.toString(errors) + (isStart ? "ooooooooooo" : "xxxxxxxxxx"));
         return isStart;
     }
 
@@ -91,8 +95,8 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
         for (i = 0; i < STILL_WINDOWS && isStill && states.size() - 1 - i >= 0; i++) {
             CountState s = states.get(states.size() - 1 - i);
             for (int sensor = 0; sensor < s.means.length && isStill; sensor++) {
-                double min = s.means[sensor] - s.sd[sensor] * 3;
-                double max = s.means[sensor] + s.sd[sensor] * 3;
+                double min = s.means[sensor] - s.sd[sensor] * 4;
+                double max = s.means[sensor] + s.sd[sensor] * 4;
 
                 if (isInitialised) {
                     minOfMin[sensor] = Math.min(minOfMin[sensor], min);
@@ -113,6 +117,8 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
             }
             isInitialised = true;
         }
+        while (states.size() > STILL_WINDOWS)
+            states.remove(0);
 
 //        String log = "";
 //        for (int sensor = 0; sensor < maxOfMax.length; sensor++) {

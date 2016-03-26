@@ -16,6 +16,7 @@ public interface CountConstants extends SensorConstants {
     String DATA_EVENT_TYPE = "eventType";
     String DATA_COMMAND = "command";
     String DATA_STATES = "states";
+    String DATA_STATES_ID = "statesId";
     String DATA_COUNT_PROGRESS = "countProgress";
     String DATA_PARTICLE_COUNT = "particleCount";
     String DATA_STATE_SCORES = "stateScores";

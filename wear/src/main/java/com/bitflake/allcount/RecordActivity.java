@@ -90,7 +90,9 @@ public class RecordActivity extends ServiceConnectedActivity implements RecordCo
     }
 
     public void onFinishedRecording(Bundle data) {
-        useStates(data.getBundle(DATA_STATES));
+        Bundle states = data.getBundle(DATA_STATES);
+        Intent intent = WearCountActivity.getStartIntent(this, states, true, 1);
+        startActivity(intent);
         resetUI();
     }
 
@@ -107,6 +109,21 @@ public class RecordActivity extends ServiceConnectedActivity implements RecordCo
     @Override
     public void onBroadcastReceived(Bundle data) {
         status = data.getInt(DATA_STATUS);
+    }
+
+    @Override
+    public void onStartCalibrating(Bundle data) {
+
+    }
+
+    @Override
+    public void onStartMoving(Bundle data) {
+
+    }
+
+    @Override
+    public void onStartMoveBack(Bundle data) {
+
     }
 
     public void onStartDelay(Bundle data) {
@@ -136,11 +153,6 @@ public class RecordActivity extends ServiceConnectedActivity implements RecordCo
 
     private void startMobileVoiceService() {
         WearConnectionManager.getInstance().startService("com.bitflake.allcount.VoiceFeedbackService",null);
-    }
-
-    private void useStates(Bundle states) {
-        Intent intent = WearCountActivity.getStartIntent(this, states, true, 1);
-        startActivity(intent);
     }
 
     public void resetUI() {

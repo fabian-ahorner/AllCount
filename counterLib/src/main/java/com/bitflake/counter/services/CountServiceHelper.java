@@ -51,6 +51,16 @@ public class CountServiceHelper extends ServiceHelper implements CountConstants 
         sendBroadcast(i);
     }
 
+    public void startCounting(Bundle states, long counterId, int countOffset) {
+        Intent i = createControlIntent();//new Intent(getContext(), CountService.class);//
+        i.putExtra(DATA_COMMAND, CMD_START_COUNTING);
+        i.putExtra(DATA_STATES, counterId);
+        i.putExtra(DATA_STATES_ID, states);
+        i.putExtra(DATA_COUNT_OFFSET, countOffset);
+//        getContext().startService(i);
+        sendBroadcast(i);
+    }
+
     public void enabelEventListener(CountEventListener listener) {
         this.listener = listener;
         super.enableBroadCastListener(Constances.INTENT_COUNT_STATUS);
