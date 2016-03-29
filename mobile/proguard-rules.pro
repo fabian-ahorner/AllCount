@@ -15,3 +15,6 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+-keepclasseswithmembernames public class * extends com.orm.SugarRecord
+-keepclasseswithmembernames public class com.orm.**
+-keepclasseswithmembernames public class com.bitflake.allcount.db.**

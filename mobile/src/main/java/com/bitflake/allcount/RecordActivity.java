@@ -3,6 +3,7 @@ package com.bitflake.allcount;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.view.View;
@@ -32,6 +33,7 @@ public class RecordActivity extends ServiceConnectedActivity implements RecordCo
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
         setContentView(R.layout.activity_record);
 
         TextView tStatus1 = (TextView) findViewById(R.id.tStatus1);

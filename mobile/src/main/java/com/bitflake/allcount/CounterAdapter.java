@@ -21,7 +21,7 @@ public class CounterAdapter extends RecyclerView.Adapter<CounterAdapter.ViewHold
     private Comparator<CounterEntry> lastUsedComparator = new Comparator<CounterEntry>() {
         @Override
         public int compare(CounterEntry lhs, CounterEntry rhs) {
-            return (int) (lhs.getLastUsed() - rhs.getLastUsed());
+            return (int) (rhs.getLastUsed() - lhs.getLastUsed());
         }
     };
 
@@ -40,7 +40,7 @@ public class CounterAdapter extends RecyclerView.Adapter<CounterAdapter.ViewHold
                 if (lastCounter < lastUsedCounters.length - 1) {
                     lastUsedCounters[++lastCounter] = counter;
                 } else if (counter.getLastUsed() > lastUsedCounters[lastCounter].getLastUsed()) {
-                    lastUsedCounters[++lastCounter] = counter;
+                    lastUsedCounters[lastCounter] = counter;
                     Arrays.sort(lastUsedCounters, lastUsedComparator);
                 }
             }

@@ -96,7 +96,9 @@ public class RouletteWheelSelection<T> {
             }
             for (T element : elements) {
                 for (int scoreProviderIndex = 0; scoreProviderIndex < totals.length; scoreProviderIndex++) {
-                    totals[scoreProviderIndex] += scoreProviders[scoreProviderIndex].getScore(element);
+                    double score = scoreProviders[scoreProviderIndex].getScore(element);
+                    totals[scoreProviderIndex] += score;
+//                    Selector<T> s = selectors.get(scoreProviderIndex);
                 }
             }
         }

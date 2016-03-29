@@ -8,7 +8,7 @@ import java.util.List;
 public class CounterEntry extends SugarRecord {
     String name;
     String data;
-    String sensors;
+    Long lastUsed;
 
     public CounterEntry() {
     }
@@ -16,10 +16,13 @@ public class CounterEntry extends SugarRecord {
     public CounterEntry(String name, List<CountState> states) {
         this.name = name;
         data = CountState.toJSON(states);
+        lastUsed = System.currentTimeMillis();
     }
+
     public CounterEntry(String name, String states) {
         this.name = name;
         data = states;
+        lastUsed = System.currentTimeMillis();
     }
 
     public List<CountState> getStates() {
@@ -34,11 +37,12 @@ public class CounterEntry extends SugarRecord {
         this.name = name;
     }
 
-    public long getLastUsed() {
-        return 0l;
+    public Long getLastUsed() {
+        return lastUsed == null ? 0 : lastUsed;
     }
 
     public void touch() {
-
+        lastUsed = System.currentTimeMillis();
+        save();
     }
 }

@@ -33,8 +33,8 @@ public class MainActivity extends ServiceConnectedActivity implements View.OnCli
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(this);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+//        setSupportActionBar(toolbar);
 
         ensureConnection(VoiceFeedbackService.class);
 //        ensureConnection(WearCountService.class);

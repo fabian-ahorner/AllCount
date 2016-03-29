@@ -2,21 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.bitflake.allcount">
 
-    <meta-data
-        android:name="DATABASE"
-        android:value="bitflake.db" />
-    <meta-data
-        android:name="VERSION"
-        android:value="5" />
-    <meta-data
-        android:name="QUERY_LOG"
-        android:value="true" />
-    <meta-data
-        android:name="DOMAIN_PACKAGE_NAME"
-        android:value="com.bitflake.allcount.db" />
-    <meta-data
-        android:name="com.google.android.gms.version"
-        android:value="@integer/google_play_services_version" />
 
     <application
         android:name=".MainApplication"
@@ -26,6 +11,24 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <!--android:screenOrientation="portrait"-->
+
+        <meta-data
+            android:name="DATABASE"
+            android:value="bitflake.db" />
+        <meta-data
+            android:name="VERSION"
+            android:value="3" />
+        <meta-data
+            android:name="QUERY_LOG"
+            android:value="true" />
+        <meta-data
+            android:name="DOMAIN_PACKAGE_NAME"
+            android:value="com.bitflake.allcount.db" />
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+
+
         <activity android:name=".CountActivity" />
         <activity android:name=".RecordActivity" />
         <activity android:name=".RecordActivityBak" />
