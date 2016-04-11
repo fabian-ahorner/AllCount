@@ -45,4 +45,9 @@ public class CounterEntry extends SugarRecord {
         lastUsed = System.currentTimeMillis();
         save();
     }
+
+    @Override
+    public String toString() {
+        return name;
+    }
 }

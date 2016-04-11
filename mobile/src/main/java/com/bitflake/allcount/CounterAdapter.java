@@ -39,6 +39,8 @@ public class CounterAdapter extends RecyclerView.Adapter<CounterAdapter.ViewHold
                 CounterEntry counter = counters.get(i);
                 if (lastCounter < lastUsedCounters.length - 1) {
                     lastUsedCounters[++lastCounter] = counter;
+                    if (lastCounter + 1 == lastUsedCounters.length)
+                        Arrays.sort(lastUsedCounters, lastUsedComparator);
                 } else if (counter.getLastUsed() > lastUsedCounters[lastCounter].getLastUsed()) {
                     lastUsedCounters[lastCounter] = counter;
                     Arrays.sort(lastUsedCounters, lastUsedComparator);
