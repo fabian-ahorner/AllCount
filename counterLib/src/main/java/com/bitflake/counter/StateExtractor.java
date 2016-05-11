@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 public class StateExtractor implements SlidingWindow.WindowAnalyser {
+    public static final int STILL_SIZE = 20;
     /**
      * The most similar states are stored first
      */
@@ -50,14 +51,14 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
     }
 
     private void checkIfStill() {
-        if (states.size() > 20) {
+        if (states.size() > STILL_SIZE) {
             double[] minOfMax = new double[3];
             double[] maxOfMax = new double[3];
             double[] minOfMin = new double[3];
             double[] maxOfMin = new double[3];
             boolean isStill = true;
             boolean isInitialised = false;
-            for (int iS = states.size() - 20; iS < states.size() && isStill; iS++) {
+            for (int iS = states.size() - STILL_SIZE; iS < states.size() && isStill; iS++) {
                 CountState s = states.get(iS);
                 for (int sensor = 0; sensor < s.means.length && isStill; sensor++) {
                     double min = s.means[sensor] - s.sd[sensor] * 2.5;
@@ -98,17 +99,17 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
 
 
     public void compressStates() {
-        states = compressStates(states, 10);
+        states = compressStates(states);
     }
 
     /**
      * Merges similar neighbouring states
      */
-    public static List<CountState> compressStates(List<CountState> states, int depth) {
+    public static List<CountState> compressStates(List<CountState> states) {
 //        double minDistance = 0.2;//computeSimilarityBoundary(states);
-        double minDistance = 2 * getStillBoundary(states);//computeSimilarityBoundary(states);
+        double minDistance = getStillBoundary(states);//computeSimilarityBoundary(states);
 //        double minDistance = 0.1;//computeSimilarityBoundary(states);
-        List<CountState> newStates = getCompressedStates(states, 0, states.size() - 1, minDistance * 3, depth);
+        List<CountState> newStates = getCompressedStates(states, 0, states.size() - 1, minDistance * 3);
         if (states.size() == 0)
             return newStates;
         newStates.add(0, states.get(0));
@@ -122,49 +123,27 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
             last = current;
         }
 
-//        int i = 0;
-//        CountState last = newStates.get(i++);
-//        while (i < newStates.size()) {
-//            CountState next = newStates.get(i);
-//            double distance = last.getDistance(next);
-//            if (distance > minDistance) {
-//                last.setNext(next);
-//                last = next;
-//                i++;
-//            } else {
-//                newStates.remove(i);
-//            }
-//        }
+        minDistance = computeSimilarityBoundary(newStates);
+        int i = 0;
+        last = newStates.get(i++);
+        while (i < newStates.size()) {
+            CountState next = newStates.get(i);
+            double distance = last.getDistance(next);
+            if (distance > minDistance) {
+                last.setNext(next);
+                last = next;
+                i++;
+            } else {
+                newStates.remove(i);
+            }
+        }
+
         last.setNext(null);
-        states = newStates;
-//
-//        PriorityQueue<CountState> mergeList = new PriorityQueue<>(20, mergeComparator);
-//        minDistance = computeSimilarityBoundary(states);
-//
-//        for (CountState s :
-//                states) {
-//            if (s.hasNext())
-//                mergeList.add(s);
-//        }
-//        int stateCount = states.size();
-//        while (mergeList.size() > 1 && mergeList.peek().getDistanceToNext() < minDistance) {
-//            CountState state = mergeList.poll();
-//            //Check if state was already merged
-//            CountState toMerge = state.getNext();
-//            mergeStates(state, toMerge);
-//            states.remove(toMerge);
-//            mergeList.remove(toMerge);
-//            if (state.getNext() != null)
-//                mergeList.add(state);
-//        }
-//        Log.d("bitflake", "Remaining states:" + states.size() + "/" + stateCount + "(Boundary=" + minDistance + ")");
-        return states;
+        return newStates;
     }
 
-    public static List<CountState> getCompressedStates(List<CountState> states, int from, int to, double minDistance, int depth) {
+    public static List<CountState> getCompressedStates(List<CountState> states, int from, int to, double minDistance) {
         ArrayList<CountState> compressedStates = new ArrayList<>();
-//        if (depth <= 0)
-//            return compressedStates;
         double maxDistance = 0;
         int landmark = -1;
         CountState sFrom = states.get(from);
@@ -198,9 +177,9 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
         }
         double gradientSimilarity = 2 * gradient * interpolatedGradient / (gradient * gradient + interpolatedGradient * interpolatedGradient);
         if (gradientSimilarity < 0.95 && maxDistance > minDistance && landmark != -1) {
-            compressedStates.addAll(getCompressedStates(states, from, landmark, minDistance, depth - 1));
+            compressedStates.addAll(getCompressedStates(states, from, landmark, minDistance));
             compressedStates.add(states.get(landmark));
-            compressedStates.addAll(getCompressedStates(states, landmark, to, minDistance, depth - 1));
+            compressedStates.addAll(getCompressedStates(states, landmark, to, minDistance));
         }
         return compressedStates;
     }
@@ -239,13 +218,14 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
 
     public static double getStillBoundary(List<CountState> states) {
         double maxDistance = 0;
-        for (int i = states.size() - 1; i >= 0 && i > states.size() - 20; i--) {
+        for (int i = states.size() - 1; i >= 0 && i > states.size() - STILL_SIZE / 2; i--) {
             CountState state = states.get(i);
             for (int j = i + 1; j < states.size(); j++) {
                 maxDistance = Math.max(maxDistance, states.get(j).getDistance(state));
             }
         }
         return maxDistance;
+//        return states.get(0).getDistance(states.get(states.size() - 1));
     }
 
     public List<CountState> getStates() {

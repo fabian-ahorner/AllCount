@@ -76,7 +76,7 @@ public class StateView extends View {
         stateWith = 0;
 
         compressedStates = new ArrayList<>(states);
-        compressedStates = StateExtractor.compressStates(compressedStates, depth);
+        compressedStates = StateExtractor.compressStates(compressedStates);
     }
 
     @Override
@@ -304,9 +304,9 @@ public class StateView extends View {
         } else if (depth >= 0) {
             this.depth--;
         }
-        if (states.size() > 0) {
+        if(states.size()>0) {
             compressedStates = new ArrayList<>(states);
-            compressedStates = StateExtractor.compressStates(compressedStates, depth);
+            compressedStates = StateExtractor.compressStates(compressedStates);
         }
         invalidate();
         return true;
