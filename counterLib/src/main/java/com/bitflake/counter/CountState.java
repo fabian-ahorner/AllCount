@@ -2,12 +2,16 @@ package com.bitflake.counter;
 
 import android.os.Bundle;
 
+import com.bitflake.counter.tools.RouletteWheel;
+import com.bitflake.counter.tools.ScoreProviders;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class CountState {
     @Expose
@@ -15,7 +19,8 @@ public class CountState {
     @Expose
     public double[] sd;
     @Expose
-    private CountState next;
+    private CountState[] next;
+    private Set<CountState> previous;
     @Expose
     private int id;
     @Expose
@@ -24,6 +29,9 @@ public class CountState {
     private int particleCount = 0;
     private int totalParticles;
     private double maxStateDistance;
+    private RouletteWheel<CountState> roulette;
+    private RouletteWheel.Selector<CountState> nextSelector;
+
 
     public CountState(double[] means, double[] sd, int id) {
         this.means = means;
@@ -43,12 +51,6 @@ public class CountState {
             sim += Math.pow(sd[i] - w.sd[i], 2);
         }
         return Math.sqrt(sim) / (means.length * 2);
-//        double sim = 0;
-//        for (int i = 0; i < means.length; i++) {
-//            sim += getSimLog(means[i], w.means[i]);
-//            sim += getSimLog(sd[i], w.sd[i]);
-//        }
-//        return -sim;
     }
 
     private double getSimLog(double v1, double v2) {
@@ -58,7 +60,9 @@ public class CountState {
     }
 
     public void setNext(CountState w) {
-        this.next = w;
+        if (this.next == null)
+            this.next = new CountState[1];
+        this.next[0] = w;
         this.distanceToNext = w == null ? 0 : getDistance(w);
     }
 
@@ -67,11 +71,13 @@ public class CountState {
     }
 
     public CountState getNext() {
-        return next;
+        return next == null ? null : next[0];
     }
 
     @Override
     public String toString() {
+        if (nextSelector != null)
+            return String.valueOf(id) + " " + nextSelector.toString() + " \t" + distance;
         return String.valueOf(id);
 //        return String.format("Means: %5.2f %5.2f %5.2f  \tSD: %5.2f %5.2f %5.2f  \tSim: %5.2f", means[0], means[1], means[2], sd[0], sd[1], sd[2], distanceToNext);
     }
@@ -79,7 +85,10 @@ public class CountState {
 
     public void updateDistance(CountState w) {
         if (next != null)
-            next.updateDistance(w);
+            for (int i = 0; i < next.length; i++) {
+                if (next[i] != null)
+                    next[i].updateDistance(w);
+            }
         this.distance = getDistance(w);
         if (maxStateDistance > 0)
             this.distance /= maxStateDistance;
@@ -115,7 +124,7 @@ public class CountState {
         b.putDoubleArray("sd", sd);
         b.putInt("id", id);
         if (next != null)
-            b.putInt("next", next.id);
+            b.putInt("next", next[0].id);
         return b;
     }
 
@@ -128,26 +137,6 @@ public class CountState {
 
     public static List<CountState> fromBundles(Bundle bundle) {
         return fromJSON(bundle.getString("data"));
-//        List<CountState> states = new ArrayList<>();
-//        SparseArray<CountState> stateMap = new SparseArray<>();
-//        Bundle b = bundle;
-//        do {
-//            CountState state = fromBundle(b);
-//            states.add(state);
-//            stateMap.put(state.getId(), state);
-//            b = b.getBundle("nextBundle");
-//        } while (b != null);
-//        b = bundle;
-//        do {
-//            int id = b.getInt("id");
-//            if (b.containsKey("next")) {
-//                int next = b.getInt("next");
-//                CountState state = stateMap.get(id);
-//                state.setNext(stateMap.get(next));
-//            }
-//            b = b.getBundle("nextBundle");
-//        } while (b != null);
-//        return states;
     }
 
     public Bundle toBundles() {
@@ -155,17 +144,6 @@ public class CountState {
         Bundle b = new Bundle();
         b.putString("data", toJSON());
         return b;
-//        Bundle bundle = toBundle();
-//        CountState s = next;
-//        Bundle b = bundle;
-//
-//        do {
-//            Bundle nextBundle = s.toBundle();
-//            b.putBundle("nextBundle", nextBundle);
-//            b = nextBundle;
-//            s = s.getNext();
-//        } while (s != null);
-//        return bundle;
     }
 
     public int getId() {
@@ -213,5 +191,53 @@ public class CountState {
 
     public void setMaxStateDistance(double maxStateDistance) {
         this.maxStateDistance = maxStateDistance;
+    }
+
+    public void addPrevious(CountState previous) {
+        if (this.previous == null)
+            this.previous = new HashSet<>();
+        this.previous.add(previous);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        CountState that = (CountState) o;
+        return id == that.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
+    }
+
+    public void initRoulette() {
+        roulette = new RouletteWheel<>();
+        nextSelector = roulette.addScoreProvider(ScoreProviders.STATE_STRONG);
+        if (previous != null) {
+            for (CountState s : previous) {
+                roulette.addElement(s);
+            }
+        }
+        roulette.addElement(this);
+        if (hasNext())
+            roulette.addElements(next);
+    }
+
+    public CountState getPossibleNext() {
+//        CountState best = nextSelector.getBest();
+//        if (nextSelector.getBest().getId() > getId())
+//            return best;
+        return nextSelector.pickElement();
+    }
+
+    public void updateRoulette() {
+        roulette.notifyValuesChanged();
+    }
+
+    public boolean hasNext() {
+        return next != null && next[0] != null;
     }
 }

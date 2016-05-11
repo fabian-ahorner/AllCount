@@ -13,6 +13,7 @@ public class Particle {
     private CountState state;
     private double smoothedError;
     ArrayList<String> path = new ArrayList<>();
+    private int backwardSteps;
 
     public Particle(CountState state) {
         this.state = state;
@@ -27,16 +28,15 @@ public class Particle {
     }
 
     public void move() {
-        if (state.getNext() != null) {
-            double d1 = state.getDistance();
-            double d2 = state.getNext().getDistance();
-//            if (d2 < d1 || Math.random() > 0.95) {
-            if (Math.random() > JITTER / 2 + Stats.sigmoidal((d1 - d2) * 10) * (1 - JITTER)) {//d2 < 1 &&
-                moveToNext();
-            }
-//            }
-            smoothedError = smoothedError * 0.5 + state.getDistance() * 0.5;
-        }
+        state.removeParticle();
+        int lastId = state.getId();
+        state = state.getPossibleNext();
+        if (state.getId() < lastId)
+            cumulatedError++;
+//        state = state.getPossibleNext();
+
+        state.addParticle();
+        smoothedError = smoothedError * 0.5 + state.getDistance() * 0.5;
         cumulatedError += Math.pow(state.getDistance(), 1);
         path.add(toString());
     }
@@ -56,6 +56,7 @@ public class Particle {
         this.smoothedError = state.getDistance();
         this.state = state;
         this.cumulatedError = state.getDistance();
+        this.backwardSteps = 0;
         state.addParticle();
         path.clear();
         path.add(Arrays.toString(Thread.currentThread().getStackTrace()));
@@ -74,11 +75,12 @@ public class Particle {
         return state;
     }
 
-    public void learnFrom(Particle strong) {
-        this.setState(strong.getState());
-        this.cumulatedError = strong.cumulatedError;
+    public void learnFrom(Particle teacher) {
+        this.setState(teacher.getState());
+        this.cumulatedError = teacher.cumulatedError;
+        this.backwardSteps = teacher.backwardSteps;
         this.path.clear();
-        this.path.addAll(strong.path);
+        this.path.addAll(teacher.path);
     }
 
     public void setCumulatedError(double cumulatedError) {

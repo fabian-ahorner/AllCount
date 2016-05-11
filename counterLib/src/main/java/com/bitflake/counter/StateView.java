@@ -13,6 +13,7 @@ import android.graphics.Path;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.View;
 
 import com.bitflake.counter.services.CountConstants;
@@ -40,6 +41,8 @@ public class StateView extends View {
             0xFFFFFFFF, 0xFF888888, 0xFFF50057
     };
     private boolean isRegistered;
+    private List<CountState> compressedStates;
+    private int depth;
 
     public StateView(Context context) {
         super(context);
@@ -71,6 +74,9 @@ public class StateView extends View {
             }
         }
         stateWith = 0;
+
+        compressedStates = new ArrayList<>(states);
+        compressedStates = StateExtractor.compressStates(compressedStates, depth);
     }
 
     @Override
@@ -116,6 +122,10 @@ public class StateView extends View {
         if (states != null) {
             for (int s = 0; s < sensors; s++) {
                 path.reset();
+                paintStates.setColor(colors[s]);
+                paintStates.setAlpha(0xFF);
+                paintStates.setStyle(Paint.Style.FILL_AND_STROKE);
+
                 for (int state = 0; state < states.size() - 1; state++) {
                     float y1 = getY(s, state, true);
                     float x1 = getX(state);
@@ -127,6 +137,8 @@ public class StateView extends View {
                         path.moveTo(x1, y1);
 //                    path.cubicTo(xC, y1, xC, y2, x2, y2);
                     path.lineTo(x2, y2);
+                    if (compressedStates != null && compressedStates.contains(states.get(state)))
+                        canvas.drawCircle(x1, (y1 + getY(s, state, true)) / 2, density * 4, paintStates);
                 }
                 for (int state = states.size() - 1; state > 0; state--) {
                     float y1 = getY(s, state, false);
@@ -144,13 +156,12 @@ public class StateView extends View {
                 }
 //                path.close();
                 paintStates.setColor(colors[s]);
-//                paintStates.setAlpha(0x44);
-                paintStates.setStyle(Paint.Style.FILL);
+                paintStates.setAlpha(0x88);
                 canvas.drawPath(path, paintStates);
-                paintStates.setColor(colors[s]);
-                paintStates.setStyle(Paint.Style.STROKE);
-                paintStates.setStrokeWidth(density);
-                canvas.drawPath(path, paintStates);
+//                paintStates.setColor(colors[s]);
+//                paintStates.setStyle(Paint.Style.STROKE);
+//                paintStates.setStrokeWidth(density);
+//                canvas.drawPath(path, paintStates);
             }
         }
         if (lastState != null && !isRecording) {
@@ -282,5 +293,22 @@ public class StateView extends View {
         if (stateWith != this.stateWith)
             invalidate();
         this.stateWith = stateWith;
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (event.getAction() != MotionEvent.ACTION_DOWN)
+            return false;
+        if (event.getX() > getWidth() / 2) {
+            this.depth++;
+        } else if (depth >= 0) {
+            this.depth--;
+        }
+        if (states.size() > 0) {
+            compressedStates = new ArrayList<>(states);
+            compressedStates = StateExtractor.compressStates(compressedStates, depth);
+        }
+        invalidate();
+        return true;
     }
 }

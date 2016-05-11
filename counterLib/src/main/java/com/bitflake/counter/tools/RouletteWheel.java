@@ -5,13 +5,23 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class RouletteWheelSelection<T> {
+public class RouletteWheel<T> {
     private ScoreProvider<T>[] scoreProviders;
+    private T[] best;
+    private T[] worst;
+    private double[] bestScore;
+    private double[] worstScore;
     private List<T> elements;
     private double[] totals;
     private List<Selector<T>> selectors = new ArrayList<>();
+    private boolean isDirty;
 
-    public RouletteWheelSelection(ScoreProvider<T>... scoreProviders) {
+    public RouletteWheel(ScoreProvider<T>... scoreProviders) {
+        init(scoreProviders);
+        this.elements = new ArrayList<>();
+    }
+
+    private void init(ScoreProvider<T>... scoreProviders) {
         this.scoreProviders = scoreProviders;
         this.totals = new double[scoreProviders.length];
         for (int i = 0; i < scoreProviders.length; i++) {
@@ -19,8 +29,8 @@ public class RouletteWheelSelection<T> {
         }
     }
 
-    public RouletteWheelSelection(List<T> elements, ScoreProvider<T>... scoreProviders) {
-        this(scoreProviders);
+    public RouletteWheel(List<T> elements, ScoreProvider<T>... scoreProviders) {
+        init(scoreProviders);
         setElements(elements);
     }
 
@@ -32,6 +42,10 @@ public class RouletteWheelSelection<T> {
         int newIndex = scoreProviders.length;
 
         this.scoreProviders = Arrays.copyOf(scoreProviders, newIndex + 1);
+        this.best = (T[]) new Object[scoreProviders.length];
+        this.worst = (T[]) new Object[scoreProviders.length];
+        bestScore = new double[scoreProviders.length];
+        worstScore = new double[scoreProviders.length];
         this.scoreProviders[newIndex] = scoreProvider;
         this.totals = Arrays.copyOf(totals, newIndex + 1);
         notifyValuesChanged();
@@ -49,11 +63,18 @@ public class RouletteWheelSelection<T> {
         return totals[scoreProviderIndex] / elements.size();
     }
 
+    public void clear() {
+        this.elements.clear();
+        for (int i = 0; i < totals.length; i++) {
+            totals[i] = 0;
+        }
+    }
+
     public interface ScoreProvider<T> {
         double getScore(T element);
     }
 
-    private T pickElement(int scoreProviderIndex) {
+    public T pickElement(int scoreProviderIndex) {
         return elements.get(pickElementIndex(scoreProviderIndex));
     }
 
@@ -65,12 +86,14 @@ public class RouletteWheelSelection<T> {
     private T removeElementByIndex(int index) {
         T element = elements.remove(index);
         removeFromTotals(element);
+        isDirty = true;
         return element;
     }
 
     public void removeElement(T element) {
         elements.remove(element);
         removeFromTotals(element);
+        isDirty = true;
     }
 
     private void removeFromTotals(T element) {
@@ -81,7 +104,18 @@ public class RouletteWheelSelection<T> {
 
     private void addToTotals(T element) {
         for (int i = 0; i < totals.length; i++) {
-            totals[i] += scoreProviders[i].getScore(element);
+            double score = scoreProviders[i].getScore(element);
+            if (score < 0)
+                score = 0;
+            totals[i] += score;
+            if (best[i] == null || score > bestScore[i]) {
+                bestScore[i] = score;
+                best[i] = element;
+            }
+            if (worst[i] == null || score < worstScore[i]) {
+                worstScore[i] = score;
+                worst[i] = element;
+            }
         }
     }
 
@@ -90,17 +124,13 @@ public class RouletteWheelSelection<T> {
     }
 
     public void notifyValuesChanged() {
-        if (elements != null) {
-            for (int i = 0; i < totals.length; i++) {
-                totals[i] = 0;
-            }
-            for (T element : elements) {
-                for (int scoreProviderIndex = 0; scoreProviderIndex < totals.length; scoreProviderIndex++) {
-                    double score = scoreProviders[scoreProviderIndex].getScore(element);
-                    totals[scoreProviderIndex] += score;
-//                    Selector<T> s = selectors.get(scoreProviderIndex);
-                }
-            }
+        for (int i = 0; i < totals.length; i++) {
+            totals[i] = 0;
+            best[i] = null;
+            worst[i] = null;
+        }
+        for (T element : elements) {
+            addToTotals(element);
         }
     }
 
@@ -110,7 +140,10 @@ public class RouletteWheelSelection<T> {
         double rand = Math.random() * total;
         double cum = 0;
         for (int i = 0; i < elements.size(); i++) {
-            cum += scoreProvider.getScore(elements.get(i));
+            double score = scoreProvider.getScore(elements.get(i));
+            if (score < 0)
+                score = 0;
+            cum += score;
             if (cum >= rand) {
                 return i;
             }
@@ -123,16 +156,35 @@ public class RouletteWheelSelection<T> {
         addToTotals(element);
     }
 
+    public void addElements(T... elements) {
+        for (T el :
+                elements) {
+            addElement(el);
+        }
+    }
+
     public void setElements(List<T> elements) {
         this.elements = new ArrayList<>(elements);
         notifyValuesChanged();
     }
 
+    private String toString(int scoreProviderIndex) {
+        double total = totals[scoreProviderIndex];
+        StringBuilder sb = new StringBuilder("(");
+        ScoreProvider<T> scoreProvider = scoreProviders[scoreProviderIndex];
+        for (int i = 0; i < elements.size(); i++) {
+            sb.append((int) (scoreProvider.getScore(elements.get(i)) * 100 / total));
+            sb.append("  ");
+        }
+        sb.append(")");
+        return sb.toString();
+    }
+
     public static class Selector<T> {
         private final int scoreProviderIndex;
-        private RouletteWheelSelection<T> roulette;
+        private RouletteWheel<T> roulette;
 
-        public Selector(RouletteWheelSelection<T> roulette, int scoreProviderIndex) {
+        public Selector(RouletteWheel<T> roulette, int scoreProviderIndex) {
             this.scoreProviderIndex = scoreProviderIndex;
             this.roulette = roulette;
         }
@@ -156,5 +208,25 @@ public class RouletteWheelSelection<T> {
         public double getScore(T element) {
             return roulette.scoreProviders[scoreProviderIndex].getScore(element);
         }
+
+        public String toString() {
+            return roulette.toString(scoreProviderIndex);
+        }
+
+        public T getBest() {
+            return roulette.getBest(scoreProviderIndex);
+        }
+
+        public T getWorst() {
+            return roulette.getBest(scoreProviderIndex);
+        }
+    }
+
+    private T getBest(int scoreProviderIndex) {
+        return best[scoreProviderIndex];
+    }
+
+    private T getWorst(int scoreProviderIndex) {
+        return worst[scoreProviderIndex];
     }
 }

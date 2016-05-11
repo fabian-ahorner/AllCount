@@ -8,11 +8,10 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 public class StateExtractor implements SlidingWindow.WindowAnalyser {
-//    private final MainActivity activity;
     /**
      * The most similar states are stored first
      */
-    private Comparator<CountState> mergeComparator = new Comparator<CountState>() {
+    private static Comparator<CountState> mergeComparator = new Comparator<CountState>() {
         @Override
         public int compare(CountState lhs, CountState rhs) {
             return Double.compare(lhs.getDistanceToNext(), rhs.getDistanceToNext());
@@ -25,7 +24,6 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
     private int lastStateId;
 
     public StateExtractor() {
-//        this.activity = activity;
     }
 
     public void clear() {
@@ -98,27 +96,123 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
         Log.d("my", "--------------is still");
     }
 
+
+    public void compressStates() {
+        states = compressStates(states, 10);
+    }
+
     /**
      * Merges similar neighbouring states
      */
-    public void compressStates() {
-        double minDistance = computeSimilarityBoundary();
-        int stateCount = states.size();
-        while (mergeList.size() > 1 && mergeList.peek().getDistanceToNext() < minDistance) {
-            CountState state = mergeList.poll();
-            //Check if state was already merged
-            CountState toMerge = state.getNext();
-            state.setNext(toMerge.getNext());
-            states.remove(toMerge);
-            mergeList.remove(toMerge);
-            if (state.getNext() != null)
-                mergeList.add(state);
+    public static List<CountState> compressStates(List<CountState> states, int depth) {
+//        double minDistance = 0.2;//computeSimilarityBoundary(states);
+        double minDistance = 2 * getStillBoundary(states);//computeSimilarityBoundary(states);
+//        double minDistance = 0.1;//computeSimilarityBoundary(states);
+        List<CountState> newStates = getCompressedStates(states, 0, states.size() - 1, minDistance * 3, depth);
+        if (states.size() == 0)
+            return newStates;
+        newStates.add(0, states.get(0));
+        newStates.add(newStates.size(), states.get(states.size() - 1));
+        CountState last = newStates.get(0);
+        for (int i = 1; i < newStates.size(); i++) {
+            CountState current = newStates.get(i);
+//            current.setId(i);
+
+            last.setNext(current);
+            last = current;
         }
-        Log.d("bitflake", "Remaining states:" + states.size() + "/" + stateCount + "(Boundary=" + minDistance + ")");
-        for (CountState s :
-                states) {
-            Log.d("bitflake", s.toString());
+
+//        int i = 0;
+//        CountState last = newStates.get(i++);
+//        while (i < newStates.size()) {
+//            CountState next = newStates.get(i);
+//            double distance = last.getDistance(next);
+//            if (distance > minDistance) {
+//                last.setNext(next);
+//                last = next;
+//                i++;
+//            } else {
+//                newStates.remove(i);
+//            }
+//        }
+        last.setNext(null);
+        states = newStates;
+//
+//        PriorityQueue<CountState> mergeList = new PriorityQueue<>(20, mergeComparator);
+//        minDistance = computeSimilarityBoundary(states);
+//
+//        for (CountState s :
+//                states) {
+//            if (s.hasNext())
+//                mergeList.add(s);
+//        }
+//        int stateCount = states.size();
+//        while (mergeList.size() > 1 && mergeList.peek().getDistanceToNext() < minDistance) {
+//            CountState state = mergeList.poll();
+//            //Check if state was already merged
+//            CountState toMerge = state.getNext();
+//            mergeStates(state, toMerge);
+//            states.remove(toMerge);
+//            mergeList.remove(toMerge);
+//            if (state.getNext() != null)
+//                mergeList.add(state);
+//        }
+//        Log.d("bitflake", "Remaining states:" + states.size() + "/" + stateCount + "(Boundary=" + minDistance + ")");
+        return states;
+    }
+
+    public static List<CountState> getCompressedStates(List<CountState> states, int from, int to, double minDistance, int depth) {
+        ArrayList<CountState> compressedStates = new ArrayList<>();
+//        if (depth <= 0)
+//            return compressedStates;
+        double maxDistance = 0;
+        int landmark = -1;
+        CountState sFrom = states.get(from);
+        CountState sTo = states.get(to);
+
+        CountState lastState = sFrom;
+        double gradient = 0;
+        double interpolatedGradient = 0;
+        CountState interpolated = new CountState(new double[sFrom.means.length], new double[sFrom.means.length]);
+        for (int i = from + 1; i < to; i++) {
+            CountState state = states.get(i);
+            double percentage = (i - from) / (double) (to - from);
+            for (int j = 0; j < sFrom.means.length; j++) {
+                interpolated.means[j] = sFrom.means[j] + (sTo.means[j] - sFrom.means[j]) * percentage;
+                interpolated.sd[j] = sFrom.sd[j] + (sTo.sd[j] - sFrom.sd[j]) * percentage;
+                gradient += Math.abs(state.means[j] - lastState.means[j]);
+                gradient += Math.abs(state.sd[j] - lastState.sd[j]);
+            }
+            lastState = state;
+            double distance = interpolated.getDistance(state);
+            if (distance > maxDistance) {
+                maxDistance = distance;
+                landmark = i;
+            }
         }
+        for (int j = 0; j < sFrom.means.length; j++) {
+            gradient += Math.abs(sTo.means[j] - lastState.means[j]);
+            gradient += Math.abs(sTo.sd[j] - lastState.sd[j]);
+            interpolatedGradient += Math.abs(sTo.means[j] - sFrom.means[j]);
+            interpolatedGradient += Math.abs(sTo.sd[j] - sFrom.sd[j]);
+        }
+        double gradientSimilarity = 2 * gradient * interpolatedGradient / (gradient * gradient + interpolatedGradient * interpolatedGradient);
+        if (gradientSimilarity < 0.95 && maxDistance > minDistance && landmark != -1) {
+            compressedStates.addAll(getCompressedStates(states, from, landmark, minDistance, depth - 1));
+            compressedStates.add(states.get(landmark));
+            compressedStates.addAll(getCompressedStates(states, landmark, to, minDistance, depth - 1));
+        }
+        return compressedStates;
+    }
+
+
+    private static void mergeStates(CountState state, CountState toMerge) {
+        int originalDistance = toMerge.getId() - state.getId();
+        for (int i = 0; i < state.means.length; i++) {
+            state.means[i] = (state.means[i] * originalDistance + toMerge.means[i]) / (originalDistance + 1);
+            state.sd[i] = (state.sd[i] * originalDistance + toMerge.sd[i]) / (originalDistance + 1);
+        }
+        state.setNext(toMerge.getNext());
     }
 
     /**
@@ -126,15 +220,32 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
      *
      * @return
      */
-    private double computeSimilarityBoundary() {
-        double distMean = distSum / mergeList.size();
+    private static double computeSimilarityBoundary(List<CountState> states) {
+        double distSum = 0;
+        for (CountState s :
+                states) {
+            if (s.hasNext())
+                distSum += s.getDistanceToNext();
+        }
+        double distMean = distSum / states.size();
         double sd = 0;
         for (CountState s :
                 states) {
             if (s.getNext() != null)
                 sd += Math.pow(s.getDistanceToNext() - distMean, 2);
         }
-        return distMean + Math.sqrt(sd / mergeList.size());
+        return distMean - Math.sqrt(sd / states.size()) / 3;
+    }
+
+    public static double getStillBoundary(List<CountState> states) {
+        double maxDistance = 0;
+        for (int i = states.size() - 1; i >= 0 && i > states.size() - 20; i--) {
+            CountState state = states.get(i);
+            for (int j = i + 1; j < states.size(); j++) {
+                maxDistance = Math.max(maxDistance, states.get(j).getDistance(state));
+            }
+        }
+        return maxDistance;
     }
 
     public List<CountState> getStates() {

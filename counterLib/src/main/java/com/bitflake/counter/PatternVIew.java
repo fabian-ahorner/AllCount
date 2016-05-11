@@ -115,9 +115,9 @@ public class PatternView extends View {
             pathParticles.lineTo(getWidth(), getHeight());
             pathScores.close();
             canvas.drawPath(pathScores, paintScore);
-//            canvas.drawPath(pathParticles, paintParticles);
-//            float maxDistance = (float) (h / maxScore);
-//            canvas.drawLine(0, maxDistance, getWidth(), maxDistance, paintParticles);
+            canvas.drawPath(pathParticles, paintParticles);
+            float maxDistance = (float) (h / maxScore);
+            canvas.drawLine(0, maxDistance, getWidth(), maxDistance, paintParticles);
         }
 
     }

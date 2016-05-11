@@ -20,10 +20,13 @@ import com.bitflake.counter.Constances;
 import com.bitflake.counter.PatternView;
 import com.bitflake.counter.ServiceConnectedActivity;
 import com.bitflake.counter.CountState;
+import com.bitflake.counter.StateExtractor;
 import com.bitflake.counter.StateView;
 import com.bitflake.counter.services.CountConstants;
 import com.bitflake.counter.services.WearCountService;
 import com.bitflake.counter.services.CountServiceHelper;
+
+import java.util.List;
 
 
 public class CountActivity extends ServiceConnectedActivity implements CountConstants {
@@ -127,6 +130,11 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
         if (counterEntry != null) {
             counterName.setText(counterEntry.getName());
         }
+
+//        List<CountState> tmp = CountState.fromBundles(states);
+//        StateExtractor.compressStates(tmp);
+//        states = CountState.toBundle(tmp);
+
         patternView.setStates(CountState.fromBundles(states));
         patternView.listenToCounter();
 
@@ -147,18 +155,16 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
 
     private void saveCounter() {
         String newName = counterName.getText().toString();
-        if (counterEntry == null) {
-            counterEntry = new CounterEntry(newName, states.getString("data"));
-        } else {
-            if (newName.length() > 0) {
+        if (newName.length() > 0) {
+            if (counterEntry == null)
+                counterEntry = new CounterEntry(newName, states.getString("data"));
+            else
                 counterEntry.setName(newName);
-            } else {
-                counterEntry.delete();
-                counterEntry = null;
-                return;
-            }
+            counterEntry.save();
+        } else if (counterEntry != null) {
+            counterEntry.delete();
+            counterEntry = null;
         }
-        counterEntry.save();
     }
 
     private void startServiceAndCounting() {
