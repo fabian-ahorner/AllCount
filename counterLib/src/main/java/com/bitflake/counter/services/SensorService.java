@@ -9,7 +9,7 @@ import com.bitflake.counter.sensors.SensorValueListener;
 import com.bitflake.counter.sensors.WearAccelerationSensor;
 
 public class SensorService extends BroadcastReceiverService implements SensorValueListener {
-    protected SlidingWindow window = new SlidingWindow(3, 10);
+    protected SlidingWindow window = new SlidingWindow(3, 20);
     private SensorDataProvider sensor;
     private PowerManager.WakeLock mWakeLock;
 

@@ -38,7 +38,7 @@ public class StateView extends View {
     private float stateWith;
 
     private int[] colors = new int[]{
-            0xFFFFFFFF, 0xFF888888, 0xFFF50057
+            0xFFFF00FF, 0xFFFFFF00, 0xFF00FFFF
     };
     private boolean isRegistered;
     private List<CountState> compressedStates;
@@ -76,7 +76,7 @@ public class StateView extends View {
         stateWith = 0;
 
         compressedStates = new ArrayList<>(states);
-        compressedStates = StateExtractor.compressStates(compressedStates);
+        compressedStates = StateExtractor.compressStates(compressedStates, true, depth);
     }
 
     @Override
@@ -85,7 +85,7 @@ public class StateView extends View {
         this.density = getResources().getDisplayMetrics().density;
         path = new Path();
         paintStates = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paintStates.setStrokeWidth(2 * density);
+        paintStates.setStrokeWidth(density);
 //        paintStates.setPathEffect(new CornerPathEffect(density * 10));
     }
 
@@ -113,6 +113,7 @@ public class StateView extends View {
         super.onDraw(canvas);
         if (stateWith == 0 && states != null) {
             stateWith = getWidth() / (states.size() - 1);
+            paintStates.setPathEffect(new CornerPathEffect(getWidth() / 20));   // set the pathParticles effect when they join.
         }
         drawStates(canvas);
     }
@@ -120,10 +121,13 @@ public class StateView extends View {
     private void drawStates(Canvas canvas) {
 
         if (states != null) {
+//            float r = Math.min(stateWith / 5, getWidth() / 100);
+            float r = getWidth() / 100;
+//            r *= 5;
             for (int s = 0; s < sensors; s++) {
                 path.reset();
-                paintStates.setColor(colors[s]);
-                paintStates.setAlpha(0xFF);
+                paintStates.setColor(0xFFFFFF);
+                paintStates.setAlpha(0x88);
                 paintStates.setStyle(Paint.Style.FILL_AND_STROKE);
 
                 for (int state = 0; state < states.size() - 1; state++) {
@@ -137,8 +141,9 @@ public class StateView extends View {
                         path.moveTo(x1, y1);
 //                    path.cubicTo(xC, y1, xC, y2, x2, y2);
                     path.lineTo(x2, y2);
-                    if (compressedStates != null && compressedStates.contains(states.get(state)))
-                        canvas.drawCircle(x1, (y1 + getY(s, state, true)) / 2, density * 4, paintStates);
+//                    if (compressedStates != null && compressedStates.contains(states.get(state)) && s == 0)
+//                        canvas.drawLine(x1, 0, x1, getHeight(), paintStates);
+                    canvas.drawCircle(x1, (y1 + getY(s, state, true)) / 2, r / (states.get(state).isTransientState() ? 2 : 1), paintStates);
                 }
                 for (int state = states.size() - 1; state > 0; state--) {
                     float y1 = getY(s, state, false);
@@ -157,6 +162,8 @@ public class StateView extends View {
 //                path.close();
                 paintStates.setColor(colors[s]);
                 paintStates.setAlpha(0x88);
+                paintStates.setStyle(Paint.Style.FILL_AND_STROKE);
+
                 canvas.drawPath(path, paintStates);
 //                paintStates.setColor(colors[s]);
 //                paintStates.setStyle(Paint.Style.STROKE);
@@ -304,9 +311,9 @@ public class StateView extends View {
         } else if (depth >= 0) {
             this.depth--;
         }
-        if(states.size()>0) {
+        if (states.size() > 0) {
             compressedStates = new ArrayList<>(states);
-            compressedStates = StateExtractor.compressStates(compressedStates);
+            compressedStates = StateExtractor.compressStates(compressedStates, true, depth);
         }
         invalidate();
         return true;

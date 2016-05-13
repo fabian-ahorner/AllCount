@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import com.bitflake.allcount.db.CounterEntry;
 import com.bitflake.counter.CountState;
+import com.bitflake.counter.StateExtractor;
 import com.bitflake.counter.StateView;
 
 import java.util.Arrays;
@@ -49,7 +50,7 @@ public class CounterAdapter extends RecyclerView.Adapter<CounterAdapter.ViewHold
         }
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
         private final TextView text;
         private final StateView vis;
         private CounterEntry counter;
@@ -59,6 +60,7 @@ public class CounterAdapter extends RecyclerView.Adapter<CounterAdapter.ViewHold
             text = (TextView) v.findViewById(R.id.text1);
             vis = (StateView) v.findViewById(R.id.counterVis);
             v.setOnClickListener(this);
+            v.setOnLongClickListener(this);
         }
 
         public void bind(CounterEntry counter, boolean isLastUsed) {
@@ -77,6 +79,15 @@ public class CounterAdapter extends RecyclerView.Adapter<CounterAdapter.ViewHold
             counter.touch();
             Intent i = CountActivity.getStartIntent(v.getContext(), CountState.toBundle(counter.getStates()), counter.getId());
             v.getContext().startActivity(i);
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            counter.touch();
+            List<CountState> states = StateExtractor.compressStates(counter.getStates());
+            Intent i = CountActivity.getStartIntent(v.getContext(), CountState.toBundle(states));
+            v.getContext().startActivity(i);
+            return true;
         }
     }
 

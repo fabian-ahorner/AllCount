@@ -68,9 +68,9 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
         return i;
     }
 
-    public static Intent getStartIntent(Context context, String target) {
+    public static Intent getStartIntent(Context context, Bundle states) {
         Intent i = new Intent(context, CountActivity.class);
-//        i.putExtra(EXTRA_TARGET, target);
+        i.putExtra(EXTRA_STATES, states);
         return i;
     }
 

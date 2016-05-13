@@ -25,12 +25,16 @@ public class CountState {
     private int id;
     @Expose
     private double distanceToNext = 0;
+    @Expose
+    private boolean transientState;
     private double distance;
     private int particleCount = 0;
     private int totalParticles;
     private double maxStateDistance;
     private RouletteWheel<CountState> roulette;
     private RouletteWheel.Selector<CountState> nextSelector;
+    private double likelihood;
+    private RouletteWheel<CountState> globalRoulette;
 
 
     public CountState(double[] means, double[] sd, int id) {
@@ -44,11 +48,23 @@ public class CountState {
         this.sd = sd;
     }
 
+    public CountState(CountState last, CountState next, int id) {
+        this.means = new double[last.means.length];
+        this.sd = new double[last.sd.length];
+        for (int j = 0; j < last.means.length; j++) {
+            means[j] = last.means[j] + (next.means[j] - last.means[j]) / 2;
+            sd[j] = last.sd[j] + (next.sd[j] - last.sd[j]) / 2;
+        }
+        this.id = id;
+        transientState = true;
+        setNext(next);
+    }
+
     public double getDistance(CountState w) {
         double sim = 0;
         for (int i = 0; i < means.length; i++) {
             sim += Math.pow((means[i] - w.means[i]), 2);
-            sim += Math.pow(sd[i] - w.sd[i], 2);
+//            sim += Math.pow(sd[i] - w.sd[i], 2);
         }
         return Math.sqrt(sim) / (means.length * 2);
     }
@@ -90,6 +106,7 @@ public class CountState {
                     next[i].updateDistance(w);
             }
         this.distance = getDistance(w);
+//        this.likelihood = Math.min(1, getDistanceToNext() / distance);
         if (maxStateDistance > 0)
             this.distance /= maxStateDistance;
     }
@@ -197,6 +214,7 @@ public class CountState {
         if (this.previous == null)
             this.previous = new HashSet<>();
         this.previous.add(previous);
+        distanceToNext = Math.max(distanceToNext, getDistance(previous));
     }
 
     @Override
@@ -215,15 +233,26 @@ public class CountState {
 
     public void initRoulette() {
         roulette = new RouletteWheel<>();
-        nextSelector = roulette.addScoreProvider(ScoreProviders.STATE_STRONG);
+        nextSelector = roulette.addScoreProvider(new ScoreProviders.NextStateProvider(this));
         if (previous != null) {
             for (CountState s : previous) {
+                if (s.isTransientState()) {
+                    for (CountState s2 : s.previous) {
+                        roulette.addElement(s2);
+                    }
+                }
                 roulette.addElement(s);
             }
         }
         roulette.addElement(this);
-        if (hasNext())
+        if (hasNext()) {
+            for (CountState s : next) {
+                if (s.isTransientState()) {
+                    roulette.addElements(s.next);
+                }
+            }
             roulette.addElements(next);
+        }
     }
 
     public CountState getPossibleNext() {
@@ -235,9 +264,41 @@ public class CountState {
 
     public void updateRoulette() {
         roulette.notifyValuesChanged();
+        if (getId() == 0)
+            globalRoulette.notifyValuesChanged();
+        this.likelihood = globalRoulette.getSelector(0).getLikelihood(this);
     }
 
     public boolean hasNext() {
         return next != null && next[0] != null;
+    }
+
+    public double getLikelihood(CountState state) {
+        return nextSelector.getScore(state) / nextSelector.getTotal();
+    }
+
+    public double getLikelihood() {
+        return likelihood;
+    }
+
+    public boolean isTransientState() {
+        return transientState;
+    }
+
+
+    public void setGlobalRoulette() {
+        this.globalRoulette = new RouletteWheel<>();
+        globalRoulette.addScoreProvider(ScoreProviders.STATE_STRONG);
+        setGlobalRoulette(globalRoulette);
+    }
+
+    public void setGlobalRoulette(RouletteWheel<CountState> globalRoulette) {
+        this.globalRoulette = globalRoulette;
+        globalRoulette.addElement(this);
+        if (hasNext()) {
+            for (CountState s : next) {
+                s.setGlobalRoulette(globalRoulette);
+            }
+        }
     }
 }

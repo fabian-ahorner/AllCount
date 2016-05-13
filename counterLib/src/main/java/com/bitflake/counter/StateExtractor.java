@@ -102,14 +102,20 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
         states = compressStates(states);
     }
 
+    public static List<CountState> compressStates(List<CountState> states) {
+        return compressStates(states, false, Integer.MAX_VALUE);
+    }
+
     /**
      * Merges similar neighbouring states
      */
-    public static List<CountState> compressStates(List<CountState> states) {
-//        double minDistance = 0.2;//computeSimilarityBoundary(states);
-        double minDistance = getStillBoundary(states);//computeSimilarityBoundary(states);
+    public static List<CountState> compressStates(List<CountState> states, boolean fake, int depth) {
+//        double minDistance = 0.2;
+        double minDistance = getMaxStartDistance(states) / 10;
+        Log.d("my", "minDistance=" + minDistance);
+//        double minDistance = getStillBoundary(states);//computeSimilarityBoundary(states);
 //        double minDistance = 0.1;//computeSimilarityBoundary(states);
-        List<CountState> newStates = getCompressedStates(states, 0, states.size() - 1, minDistance * 3);
+        List<CountState> newStates = getCompressedStates(states, 0, states.size() - 1, minDistance * 3, depth);
         if (states.size() == 0)
             return newStates;
         newStates.add(0, states.get(0));
@@ -125,12 +131,20 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
 
         minDistance = computeSimilarityBoundary(newStates);
         int i = 0;
+        int id = 0;
         last = newStates.get(i++);
         while (i < newStates.size()) {
             CountState next = newStates.get(i);
             double distance = last.getDistance(next);
             if (distance > minDistance) {
-                last.setNext(next);
+                if (fake) {
+                    last.setNext(next);
+                } else {
+                    last.setId(id++);
+                    CountState transientState = new CountState(last, next, id++);
+                    last.setNext(transientState);
+                    newStates.add(i++, transientState);
+                }
                 last = next;
                 i++;
             } else {
@@ -139,11 +153,27 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
         }
 
         last.setNext(null);
+        if (!fake)
+            last.setId(id);
+        Log.d("my", "Compressed:" + newStates.size() + "/" + states.size());
         return newStates;
     }
 
-    public static List<CountState> getCompressedStates(List<CountState> states, int from, int to, double minDistance) {
+    private static double getMaxStartDistance(List<CountState> states) {
+        if (states.size() == 0)
+            return 0;
+        CountState firstState = states.get(0);
+        double distance = 0;
+        for (int i = 1; i < states.size(); i++) {
+            distance = Math.max(distance, firstState.getDistance(states.get(i)));
+        }
+        return distance;
+    }
+
+    public static List<CountState> getCompressedStates(List<CountState> states, int from, int to, double minDistance, int depth) {
         ArrayList<CountState> compressedStates = new ArrayList<>();
+        if (depth <= 0)
+            return compressedStates;
         double maxDistance = 0;
         int landmark = -1;
         CountState sFrom = states.get(from);
@@ -158,9 +188,9 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
             double percentage = (i - from) / (double) (to - from);
             for (int j = 0; j < sFrom.means.length; j++) {
                 interpolated.means[j] = sFrom.means[j] + (sTo.means[j] - sFrom.means[j]) * percentage;
-                interpolated.sd[j] = sFrom.sd[j] + (sTo.sd[j] - sFrom.sd[j]) * percentage;
+//                interpolated.sd[j] = sFrom.sd[j] + (sTo.sd[j] - sFrom.sd[j]) * percentage;
                 gradient += Math.abs(state.means[j] - lastState.means[j]);
-                gradient += Math.abs(state.sd[j] - lastState.sd[j]);
+//                gradient += Math.abs(state.sd[j] - lastState.sd[j])/2;
             }
             lastState = state;
             double distance = interpolated.getDistance(state);
@@ -171,15 +201,17 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
         }
         for (int j = 0; j < sFrom.means.length; j++) {
             gradient += Math.abs(sTo.means[j] - lastState.means[j]);
-            gradient += Math.abs(sTo.sd[j] - lastState.sd[j]);
+//            gradient += Math.abs(sTo.sd[j] - lastState.sd[j])/2;
             interpolatedGradient += Math.abs(sTo.means[j] - sFrom.means[j]);
-            interpolatedGradient += Math.abs(sTo.sd[j] - sFrom.sd[j]);
+//            interpolatedGradient += Math.abs(sTo.sd[j] - sFrom.sd[j])/2;
         }
-        double gradientSimilarity = 2 * gradient * interpolatedGradient / (gradient * gradient + interpolatedGradient * interpolatedGradient);
-        if (gradientSimilarity < 0.95 && maxDistance > minDistance && landmark != -1) {
-            compressedStates.addAll(getCompressedStates(states, from, landmark, minDistance));
+//        double gradientSimilarity = 2 * gradient * interpolatedGradient / (gradient * gradient + interpolatedGradient * interpolatedGradient);
+        double gradientSimilarity = gradient / interpolatedGradient;
+        double maxSimilarity = 1.2;
+        if ((gradientSimilarity > maxSimilarity || gradientSimilarity < 1 / maxSimilarity) && maxDistance > minDistance && landmark != -1) {
+            compressedStates.addAll(getCompressedStates(states, from, landmark, minDistance, depth - 1));
             compressedStates.add(states.get(landmark));
-            compressedStates.addAll(getCompressedStates(states, landmark, to, minDistance));
+            compressedStates.addAll(getCompressedStates(states, landmark, to, minDistance, depth - 1));
         }
         return compressedStates;
     }

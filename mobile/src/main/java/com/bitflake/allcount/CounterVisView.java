@@ -117,7 +117,7 @@ public class CounterVisView extends View {
 //        }
 
         canvas.drawCircle(w / 2, h / 2, maxR, centerPaint);
-        int[] colors = new int[]{0xFFFFFF00, 0xFF00FFFF, 0xFFFF00FF};
+//        int[] colors = new int[]{0xFFFF00FF, 0xFFFFFF00, 0xFF00FFFF};
         if (states != null) {
             for (int s = 0; s < sensors; s++) {
 //                path.moveTo(w / 2, h / 2 - maxR);

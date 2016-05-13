@@ -64,6 +64,7 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
 //            maxStateDistance = averageDistance;
             initParticles();
             this.firstState = states.get(0);
+            firstState.setGlobalRoulette();
             particleSelector.setElements(particles);
 
             for (CountState s : states) {
@@ -110,9 +111,14 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
         bestScore = Math.min(bestScore, startParticle.getCumulatedError());
         for (Particle p : particles) {
             p.move();
-            p.setCumulatedError(p.getCumulatedError() - bestScore);
+//            p.setCumulatedError(p.getCumulatedError() - bestScore);
+//            if (Math.random() > p.getState().getLikelihood()) {
+//                p.setState(firstState);
+//                p.setCumulatedError(bestScore + Math.log(0.1));
+//            }
         }
         particleSelector.notifyValuesChanged();
+//        Log.d("my", strongParticleSelector.toString());
         int iBestParticleState = states.indexOf(bestParticle.getState());
         int iMostParticleState = getMostLikelyState();
 
@@ -133,18 +139,30 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
     }
 
     private void resample(int mostLikelyStateIndex) {
-//        startParticle.setCumulatedError(startParticle.getCumulatedError() + 1);
-
-        double worstCummulated = weakParticleSelector.getWorst().getCumulatedError();
-
-        double averageError = weakParticleSelector.getAverage();
-        for (int i = 0; i < particles.size() / 10; i++) {
+        Particle bestParticle = strongParticleSelector.getBest();
+//        if (startParticle.getLikelihood() > bestParticle.getLikelihood())
+//            bestParticle = startParticle;
+//        if (bestParticle.getLikelihood() < 1) {
+//            int i = PARTICLE_COUNT / 10;
+//        for (int i = 0; i < PARTICLE_COUNT / 10; i++) {
+//            Particle weak = weakParticleSelector.pickAndRemoveElement();
+//            Particle strong = getStrongParticle();
+//            weak.learnFrom(strong);
+//            particleSelector.addElement(weak);
+//        }
+        while (bestParticle.getState().getParticleCount() < PARTICLE_COUNT / 3) {
             Particle weak = weakParticleSelector.pickAndRemoveElement();
-            Particle strong = getStrongParticle();
-            weak.learnFrom(strong);
+            weak.learnFrom(bestParticle);
             particleSelector.addElement(weak);
         }
-        startParticle.setCumulatedError(Math.min(worstCummulated, startParticle.getCumulatedError() + 1));
+//        }
+//        startParticle.setCumulatedError(startParticle.getCumulatedError() + 1);
+
+//        double worstCummulated = weakParticleSelector.getWorst().getCumulatedError();
+
+//        double averageError = weakParticleSelector.getAverage();
+
+//        startParticle.setCumulatedError(Math.min(worstCummulated, startParticle.getCumulatedError() + 1));
     }
 
     private void resetParticles() {
@@ -181,18 +199,18 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
         return state;
     }
 
-    public int getBestParticleStateIndex() {
-        Particle bestParticle = particles.get(0);
-        worstCumulatedError = 0;
-        for (Particle p :
-                particles) {
-            if (p.getCumulatedError() < bestParticle.getCumulatedError())
-                bestParticle = p;
-            worstCumulatedError = Math.max(worstCumulatedError, p.getCumulatedError());
-        }
-        bestCumulatedError = bestParticle.getCumulatedError();
-        return states.indexOf(bestParticle.getState());
-    }
+//    public int getBestParticleStateIndex() {
+//        Particle bestParticle = particles.get(0);
+//        worstCumulatedError = 0;
+//        for (Particle p :
+//                particles) {
+//            if (p.getCumulatedError() < bestParticle.getCumulatedError())
+//                bestParticle = p;
+//            worstCumulatedError = Math.max(worstCumulatedError, p.getCumulatedError());
+//        }
+//        bestCumulatedError = bestParticle.getCumulatedError();
+//        return states.indexOf(bestParticle.getState());
+//    }
 
     public boolean hasStates() {
         return states != null;
@@ -226,11 +244,11 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
      * @return
      */
     public Particle getStrongParticle() {
-        double startScore = strongParticleSelector.getScore(startParticle);
-        double total = startScore + strongParticleSelector.getTotal();
-        if (Math.random() * total > startScore)
-            return strongParticleSelector.pickElement();
-        return startParticle;
+//        double startScore = strongParticleSelector.getScore(startParticle);
+//        double total = startScore + strongParticleSelector.getTotal();
+//        if (Math.random() * total > startScore)
+        return strongParticleSelector.pickElement();
+//        return startParticle;
     }
 
     public interface CountListener {

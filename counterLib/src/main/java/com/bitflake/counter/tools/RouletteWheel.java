@@ -209,6 +209,10 @@ public class RouletteWheel<T> {
             return roulette.scoreProviders[scoreProviderIndex].getScore(element);
         }
 
+        public double getLikelihood(T element) {
+            return getScore(element) / getTotal();
+        }
+
         public String toString() {
             return roulette.toString(scoreProviderIndex);
         }

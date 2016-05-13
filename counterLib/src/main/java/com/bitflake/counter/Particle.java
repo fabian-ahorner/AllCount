@@ -11,19 +11,18 @@ public class Particle {
     private static final double JITTER = 0.1;
     private double cumulatedError;
     private CountState state;
-    private double smoothedError;
     ArrayList<String> path = new ArrayList<>();
-    private int backwardSteps;
+    private double likelihood = 0;
 
     public Particle(CountState state) {
         this.state = state;
-        this.cumulatedError = 0;
+//        this.cumulatedError = 0;
         state.addParticle();
     }
 
     public Particle(CountState state, double cumulatedError) {
         this.state = state;
-        this.cumulatedError = cumulatedError;
+//        this.cumulatedError = cumulatedError;
         state.addParticle();
     }
 
@@ -31,14 +30,20 @@ public class Particle {
         state.removeParticle();
         int lastId = state.getId();
         state = state.getPossibleNext();
-        if (state.getId() < lastId)
-            cumulatedError++;
-//        state = state.getPossibleNext();
+//        likelihood *= state.getLikelihood(state);
+//        if (state.getId() != lastId)
+        likelihood += Math.log(state.getLikelihood(state));
+//        if (state.getId() < lastId)
+//            cumulatedError++;
+//            likelihood += Math.log(0.1);
+//        else
+//            likelihood += Math.log(0.45);
+//        if (state.getId() != 0)
+        likelihood += Math.log(state.getLikelihood());
 
         state.addParticle();
-        smoothedError = smoothedError * 0.5 + state.getDistance() * 0.5;
-        cumulatedError += Math.pow(state.getDistance(), 1);
-        path.add(toString());
+        cumulatedError += Math.pow(state.getDistance(), 2);
+        path.add(state.toString());
     }
 
     private void moveToNext() {
@@ -47,24 +52,23 @@ public class Particle {
         state.addParticle();
     }
 
-    public double getSmoothedError() {
-        return smoothedError;
-    }
+//    public double getSmoothedError() {
+//        return smoothedError;
+//    }
 
     public void setState(CountState state) {
         this.state.removeParticle();
-        this.smoothedError = state.getDistance();
         this.state = state;
         this.cumulatedError = state.getDistance();
-        this.backwardSteps = 0;
+        this.likelihood = 0;
         state.addParticle();
         path.clear();
-        path.add(Arrays.toString(Thread.currentThread().getStackTrace()));
-        path.add(String.valueOf(cumulatedError));
+//        path.add(Arrays.toString(Thread.currentThread().getStackTrace()));
+//        path.add(String.valueOf(cumulatedError));
     }
 
     public double getCumulatedError() {
-        return cumulatedError;
+        return likelihood;
     }
 
     public double getDistance() {
@@ -78,14 +82,15 @@ public class Particle {
     public void learnFrom(Particle teacher) {
         this.setState(teacher.getState());
         this.cumulatedError = teacher.cumulatedError;
-        this.backwardSteps = teacher.backwardSteps;
-        this.path.clear();
+        this.likelihood = teacher.likelihood;
+//        this.path.clear();
         this.path.addAll(teacher.path);
     }
 
     public void setCumulatedError(double cumulatedError) {
-        this.cumulatedError = cumulatedError;
+//        this.cumulatedError = cumulatedError;
         this.path.add("Reset cummulated:" + cumulatedError);
+        this.likelihood = cumulatedError;
     }
 
     public void printPath() {
@@ -93,6 +98,10 @@ public class Particle {
     }
 
     public String toString() {
-        return String.format(("%.3f %10.3f \t " + state.getId()), cumulatedError, state.getDistance());
+        return String.format(("%8.3f   " + state.getId()), getCumulatedError());
+    }
+
+    public double getLikelihood() {
+        return likelihood;
     }
 }
