@@ -6,20 +6,21 @@ public abstract class ValueHelper {
 
     public void addValue(double value) {
         if (hasValue) {
+            this.value = calculate(this.value, value);
+        } else {
             this.value = value;
             hasValue = true;
-        } else
-            this.value = calculate(this.value, value);
+        }
     }
 
     public void clear() {
         this.value = 0;
-        this.hasValue = false;
+        hasValue = false;
     }
 
-    public float getFloat() {
-        return (float) value;
-    }
+//    public float getFloat() {
+//        return (float) value;
+//    }
 
     public double getValue() {
         return value;
@@ -27,14 +28,17 @@ public abstract class ValueHelper {
 
     protected abstract double calculate(double oldValue, double newValue);
 
-    public void addValue(ValueHelper value) {
-        if (value.hasValue)
-            addValue(value.value);
+//    public void addValue(ValueHelper value) {
+//        if (value.hasValue)
+//            addValue(value.value);
+//    }
+
+    public void setValue(double value) {
+        this.value = value;
     }
 
-    public void setValue(float value) {
-        this.value = value;
-        hasValue = true;
+    public boolean hasValue() {
+        return hasValue;
     }
 
     public static class Min extends ValueHelper {
@@ -50,4 +54,55 @@ public abstract class ValueHelper {
             return Math.max(oldValue, newValue);
         }
     }
+
+    public static class Sum extends ValueHelper {
+        @Override
+        protected double calculate(double oldValue, double newValue) {
+            return oldValue + newValue;
+        }
+    }
+
+    public static class Mean extends Sum {
+        private int valueCount;
+
+        @Override
+        public void addValue(double value) {
+            super.addValue(value);
+            valueCount++;
+        }
+
+        @Override
+        public void clear() {
+            super.clear();
+            valueCount = 0;
+        }
+
+        @Override
+        public double getValue() {
+            return super.getValue() / valueCount;
+        }
+    }
+
+    public static class Variance extends Mean {
+        private double mean;
+
+        public void setMean(double mean) {
+            clear();
+            this.mean = mean;
+        }
+
+        @Override
+        public void addValue(double value) {
+            super.addValue(Math.pow(value - mean, 2));
+        }
+    }
+
+    public static class StandardDeviation extends Variance {
+        @Override
+        public double getValue() {
+            return Math.sqrt(super.getValue());
+        }
+    }
+
+
 }

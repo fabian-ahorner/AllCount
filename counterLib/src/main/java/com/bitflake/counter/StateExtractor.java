@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 public class StateExtractor implements SlidingWindow.WindowAnalyser {
-    public static final int STILL_SIZE = 20;
+    public static final int STILL_SIZE = 40;
     /**
      * The most similar states are stored first
      */
@@ -40,7 +40,7 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
         state.setId(lastStateId++);
         states.add(state);
 
-        checkIfStill();
+//        checkIfStill();
 
         if (lastState != null) {
             lastState.setNext(state);
@@ -50,48 +50,48 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
         lastState = state;
     }
 
-    private void checkIfStill() {
-        if (states.size() > STILL_SIZE) {
-            double[] minOfMax = new double[3];
-            double[] maxOfMax = new double[3];
-            double[] minOfMin = new double[3];
-            double[] maxOfMin = new double[3];
-            boolean isStill = true;
-            boolean isInitialised = false;
-            for (int iS = states.size() - STILL_SIZE; iS < states.size() && isStill; iS++) {
-                CountState s = states.get(iS);
-                for (int sensor = 0; sensor < s.means.length && isStill; sensor++) {
-                    double min = s.means[sensor] - s.sd[sensor] * 2.5;
-                    double max = s.means[sensor] + s.sd[sensor] * 2.5;
-
-                    if (isInitialised) {
-                        minOfMin[sensor] = Math.min(minOfMin[sensor], min);
-                        maxOfMin[sensor] = Math.max(maxOfMin[sensor], min);
-                        minOfMax[sensor] = Math.min(minOfMax[sensor], max);
-                        maxOfMax[sensor] = Math.max(maxOfMax[sensor], max);
-                        double overlap = minOfMax[sensor] - maxOfMin[sensor];
-                        double maxDistance = maxOfMax[sensor] - minOfMin[sensor];
-                        isStill &= overlap > 0 && maxDistance < overlap * 30;
-                    } else {
-                        minOfMin[sensor] = min;
-                        maxOfMin[sensor] = min;
-                        minOfMax[sensor] = max;
-                        maxOfMax[sensor] = max;
-                    }
-                }
-                isInitialised = true;
-            }
-            String log = "";
-            for (int sensor = 0; sensor < maxOfMax.length; sensor++) {
-                double overlap = minOfMax[sensor] - maxOfMin[sensor];
-                double maxDistance = maxOfMax[sensor] - minOfMin[sensor];
-                log += String.format("%10.2f", maxDistance / overlap);
-            }
-            Log.d("my", log + "    " + (isStill ? "------------" : "+++++++"));
-            if (isStill)
-                startRecording();
-        }
-    }
+//    private void checkIfStill() {
+//        if (states.size() > STILL_SIZE) {
+//            double[] minOfMax = new double[3];
+//            double[] maxOfMax = new double[3];
+//            double[] minOfMin = new double[3];
+//            double[] maxOfMin = new double[3];
+//            boolean isStill = true;
+//            boolean isInitialised = false;
+//            for (int iS = states.size() - STILL_SIZE; iS < states.size() && isStill; iS++) {
+//                CountState s = states.get(iS);
+//                for (int sensor = 0; sensor < s.means.length && isStill; sensor++) {
+//                    double min = s.means[sensor] - s.sd[sensor] * 2.5;
+//                    double max = s.means[sensor] + s.sd[sensor] * 2.5;
+//
+//                    if (isInitialised) {
+//                        minOfMin[sensor] = Math.min(minOfMin[sensor], min);
+//                        maxOfMin[sensor] = Math.max(maxOfMin[sensor], min);
+//                        minOfMax[sensor] = Math.min(minOfMax[sensor], max);
+//                        maxOfMax[sensor] = Math.max(maxOfMax[sensor], max);
+//                        double overlap = minOfMax[sensor] - maxOfMin[sensor];
+//                        double maxDistance = maxOfMax[sensor] - minOfMin[sensor];
+//                        isStill &= overlap > 0 && maxDistance < overlap * 35;
+//                    } else {
+//                        minOfMin[sensor] = min;
+//                        maxOfMin[sensor] = min;
+//                        minOfMax[sensor] = max;
+//                        maxOfMax[sensor] = max;
+//                    }
+//                }
+//                isInitialised = true;
+//            }
+//            String log = "";
+//            for (int sensor = 0; sensor < maxOfMax.length; sensor++) {
+//                double overlap = minOfMax[sensor] - maxOfMin[sensor];
+//                double maxDistance = maxOfMax[sensor] - minOfMin[sensor];
+//                log += String.format("%10.2f", maxDistance / overlap);
+//            }
+//            Log.d("my", log + "    " + (isStill ? "------------" : "+++++++"));
+//            if (isStill)
+//                startRecording();
+//        }
+//    }
 
     private void startRecording() {
         Log.d("my", "--------------is still");

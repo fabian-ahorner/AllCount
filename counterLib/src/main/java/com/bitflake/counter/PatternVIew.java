@@ -64,7 +64,7 @@ public class PatternView extends View {
         paintParticles.setPathEffect(new CornerPathEffect(strokeWith * 10));   // set the pathParticles effect when they join.
         paintParticles.setStyle(Paint.Style.STROKE);
         paintParticles.setStrokeCap(Paint.Cap.ROUND);
-        paintParticles.setStrokeWidth(strokeWith);
+        paintParticles.setStrokeWidth(density);
         pathParticles = new Path();
         pathScores = new Path();
         getContext().registerReceiver(receiver, new IntentFilter(Constances.INTENT_COUNT_PROGRESS));
@@ -87,7 +87,7 @@ public class PatternView extends View {
                 maxParticles = Math.max(maxParticles, particleCount[i]);
             }
 
-            int w = getWidth() / particleCount.length;
+            int w = getWidth() / (particleCount.length - 1);
             int h = getHeight();
             pathParticles.reset();
             pathParticles.moveTo(0, getHeight());
@@ -99,14 +99,14 @@ public class PatternView extends View {
                 double pScore = stateScores[i] / maxScore;
 //                canvas.drawLine(i * w + w / 2, (int) (h - pScore * h), i * w + w / 2, h, paintScore);
 
-                pathScores.lineTo(i * w + w / 2, (int) (pScore * h));
+                pathScores.lineTo(i * w, (int) (pScore * h));
 //                canvas.drawCircle(i * w + w / 2, (int) (h - pScore * h), paintParticles.getStrokeWidth() * 3
 //                        , paintParticles);
 
                 double pParticle = particleCount[i] / maxParticles;
 //                canvas.drawCircle(i * w + w / 2, (int) (h - pParticle * h), paintParticles.getStrokeWidth() * 2
 //                        , paintParticles);
-                pathParticles.lineTo(i * w + w / 2, (int) (h - pParticle * h));
+                pathParticles.lineTo(i * w, (int) (h - pParticle * h));
             }
             paintParticles.setStyle(Paint.Style.FILL);
             paintParticles.setStyle(Paint.Style.STROKE);
@@ -114,8 +114,8 @@ public class PatternView extends View {
             pathScores.lineTo(getWidth(), getHeight());
             pathParticles.lineTo(getWidth(), getHeight());
             pathScores.close();
-            canvas.drawPath(pathScores, paintScore);
-            canvas.drawPath(pathParticles, paintParticles);
+            canvas.drawPath(pathParticles, paintScore);
+            canvas.drawPath(pathScores, paintParticles);
 //            float maxDistance = (float) (h / maxScore);
 //            canvas.drawLine(0, maxDistance, getWidth(), maxDistance, paintParticles);
         }

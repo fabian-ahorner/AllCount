@@ -79,6 +79,7 @@ public class CounterAdapter extends RecyclerView.Adapter<CounterAdapter.ViewHold
             counter.touch();
             Intent i = CountActivity.getStartIntent(v.getContext(), CountState.toBundle(counter.getStates()), counter.getId());
             v.getContext().startActivity(i);
+//            counter.delete();
         }
 
         @Override

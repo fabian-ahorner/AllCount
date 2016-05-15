@@ -13,24 +13,30 @@ import android.graphics.Path;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
 import com.bitflake.counter.services.CountConstants;
 import com.bitflake.counter.services.RecordConstants;
+import com.bitflake.counter.tools.ArrayValueHelper;
 import com.bitflake.counter.tools.ValueHelper;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class StateView extends View {
+    private static final int STILL_WINDOWS = 40;
+    private static final double MAX_SD = 2;
     private List<CountState> states;
+    private List<CountState> tempStates = new ArrayList<>();
     private int sensors = 3;
     private Path path;
     private ValueHelper.Min min = new ValueHelper.Min();
     private ValueHelper.Max max = new ValueHelper.Max();
     private ValueHelper.Min newMin = new ValueHelper.Min();
     private ValueHelper.Max newMax = new ValueHelper.Max();
+
     private Paint paintStates;
     private float density;
     private float mlsX;
@@ -43,6 +49,8 @@ public class StateView extends View {
     private boolean isRegistered;
     private List<CountState> compressedStates;
     private int depth;
+    private int stillFrames;
+    private CountState firstState;
 
     public StateView(Context context) {
         super(context);
@@ -77,6 +85,7 @@ public class StateView extends View {
 
         compressedStates = new ArrayList<>(states);
         compressedStates = StateExtractor.compressStates(compressedStates, true, depth);
+        firstState = states.get(0);
     }
 
     @Override
@@ -85,7 +94,7 @@ public class StateView extends View {
         this.density = getResources().getDisplayMetrics().density;
         path = new Path();
         paintStates = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paintStates.setStrokeWidth(density);
+        paintStates.setStrokeWidth(density * 2);
 //        paintStates.setPathEffect(new CornerPathEffect(density * 10));
     }
 
@@ -111,9 +120,9 @@ public class StateView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (stateWith == 0 && states != null) {
+        if (stateWith == 0 && states != null && states.size() > 1) {
             stateWith = getWidth() / (states.size() - 1);
-            paintStates.setPathEffect(new CornerPathEffect(getWidth() / 20));   // set the pathParticles effect when they join.
+            paintStates.setPathEffect(new CornerPathEffect(getWidth() / 15));   // set the pathParticles effect when they join.
         }
         drawStates(canvas);
     }
@@ -121,95 +130,65 @@ public class StateView extends View {
     private void drawStates(Canvas canvas) {
 
         if (states != null) {
-//            float r = Math.min(stateWith / 5, getWidth() / 100);
-            float r = getWidth() / 100;
+            float r = Math.min(stateWith / 5, getWidth() / 100);
+//            float r = getWidth() / 100;
 //            r *= 5;
             for (int s = 0; s < sensors; s++) {
                 path.reset();
                 paintStates.setColor(0xFFFFFF);
-                paintStates.setAlpha(0x88);
+                paintStates.setAlpha(0xFF);
                 paintStates.setStyle(Paint.Style.FILL_AND_STROKE);
+                paintStates.setColor(colors[s]);
 
-                for (int state = 0; state < states.size() - 1; state++) {
-                    float y1 = getY(s, state, true);
-                    float x1 = getX(state);
-                    float y2 = getY(s, state + 1, true);
-                    float x2 = getX(state + 1);
-
-                    float xC = (x1 + x2) / 2;
+                for (int state = 0; state < states.size(); state++) {
+                    float y = getY(s, state);
+                    float x = getX(state);
                     if (path.isEmpty())
-                        path.moveTo(x1, y1);
-//                    path.cubicTo(xC, y1, xC, y2, x2, y2);
-                    path.lineTo(x2, y2);
+                        path.moveTo(x, y);
+                    path.lineTo(x, y);
 //                    if (compressedStates != null && compressedStates.contains(states.get(state)) && s == 0)
 //                        canvas.drawLine(x1, 0, x1, getHeight(), paintStates);
-                    canvas.drawCircle(x1, (y1 + getY(s, state, true)) / 2, r / (states.get(state).isTransientState() ? 2 : 1), paintStates);
+//                    canvas.drawCircle(x1, y, r / (states.get(state).isTransientState() ? 2 : 1), paintStates);
                 }
-                for (int state = states.size() - 1; state > 0; state--) {
-                    float y1 = getY(s, state, false);
-                    float x1 = getX(state);
-                    float y2 = getY(s, state - 1, false);
-                    float x2 = getX(state - 1);
-                    float xC = (x1 + x2) / 2;
-
-                    if (state == states.size() - 1)
-                        path.lineTo(x1, y1);
-
-//                    path.cubicTo(xC, y1, xC, y2, x2, y2);
-                    path.lineTo(x2, y2);
-
-                }
-//                path.close();
-                paintStates.setColor(colors[s]);
-                paintStates.setAlpha(0x88);
-                paintStates.setStyle(Paint.Style.FILL_AND_STROKE);
-
+                paintStates.setAlpha(0xFF);
+                paintStates.setStyle(Paint.Style.STROKE);
+                paintStates.setStrokeWidth(density * 3);
                 canvas.drawPath(path, paintStates);
-//                paintStates.setColor(colors[s]);
-//                paintStates.setStyle(Paint.Style.STROKE);
-//                paintStates.setStrokeWidth(density);
-//                canvas.drawPath(path, paintStates);
             }
-        }
-        if (lastState != null && !isRecording) {
+
+            if (lastState != null && !isRecording) {
 //            float x = mostLikelyState * getWidth() / states.size();
-            showValues(canvas, lastState, mlsX);
-        } else if (isRecording && states.size() > 0) {
-            showValues(canvas, states.get(0), getWidth());
+                showValues(canvas, lastState, mlsX);
+            } else if (isRecording && firstState != null) {
+                showValues(canvas, firstState, getWidth());
+            }
         }
     }
 
-    //    private void showValues(Canvas canvas) {
-//        for (int s = 0; s < sensors; s++) {
-//            float yMax = getY(s, lastState, true);
-//            float yMin = getY(s, lastState, false);
-//            paintStates.setColor(colors[s]);
-//            paintStates.setStyle(Paint.Style.FILL);
-//            canvas.drawCircle(mlsX, (yMin + yMax) / 2, density * 8, paintStates);
-//            paintStates.setStyle(Paint.Style.STROKE);
-//            paintStates.setStrokeWidth(2 * density);
-//            canvas.drawLine(mlsX, yMin, mlsX, yMax, paintStates);
-//        }
-//    }
     private void showValues(Canvas canvas, CountState state, float x) {
         for (int s = 0; s < sensors; s++) {
-            float yMax = getY(s, state, true);
-            float yMin = getY(s, state, false);
+            float y = getY(s, state);
             paintStates.setColor(colors[s]);
-            paintStates.setStyle(Paint.Style.FILL);
-            canvas.drawCircle(x, (yMin + yMax) / 2, density * 8, paintStates);
-            paintStates.setStyle(Paint.Style.STROKE);
-            paintStates.setStrokeWidth(2 * density);
+            paintStates.setStrokeWidth(1);
+//            canvas.drawCircle(x, (yMin + yMax) / 2, density * 8, paintStates);
+            canvas.drawLine(0, y, getWidth(), y, paintStates);
+//            paintStates.setStrokeWidth(2 * density);
 //            canvas.drawLine(x, yMin, x, yMax, paintStates);
         }
     }
 
-    public float getY(int sensor, int state, boolean min) {
-        return getY(sensor, states.get(state), min);
+    public float getY(int sensor, int state) {
+        return getY(sensor, states.get(state));
     }
 
-    public float getY(int sensor, CountState state, boolean min) {
-        double value = state.means[sensor] + (min ? -1 : 1) * state.sd[sensor] / 2;
+    public float getY(int sensor, CountState state) {
+        double value = state.means[sensor];
+        double valueNormalised = (value - this.min.getValue()) / (max.getValue() - this.min.getValue());
+
+        return getHeight() - (float) valueNormalised * getHeight();
+    }
+
+    public float getY(double value) {
         double valueNormalised = (value - this.min.getValue()) / (max.getValue() - this.min.getValue());
 
         return getHeight() - (float) valueNormalised * getHeight();
@@ -244,16 +223,22 @@ public class StateView extends View {
     };
 
     private void addState(CountState state) {
+        if (firstState == null)
+            firstState = state;
         states.add(state);
+        while (states.size() > 80)
+            states.remove(0);
         if (states.size() > 1) {
-            newMin.addValue(min);
-            newMax.addValue(max);
+            if (min.hasValue())
+                newMin.addValue(min.getValue());
+            if (max.hasValue())
+                newMax.addValue(max.getValue());
             for (int i = 0; i < sensors; i++) {
-                newMin.addValue(state.means[i] - state.sd[i]);
-                newMax.addValue(state.means[i] + state.sd[i]);
+                min.addValue(state.means[i] - state.sd[i]);
+                max.addValue(state.means[i] + state.sd[i]);
             }
-            ObjectAnimator.ofFloat(StateView.this, "min", newMin.getFloat()).start();
-            ObjectAnimator.ofFloat(StateView.this, "max", newMax.getFloat()).start();
+//            ObjectAnimator.ofFloat(StateView.this, "min", (float) newMin.getValue()).start();
+//            ObjectAnimator.ofFloat(StateView.this, "max", (float) newMax.getValue()).start();
 //            ObjectAnimator.ofFloat(StateView.this, "stateWith", getWidth() / (states.size() - 1)).start();
 //            this.min.addValue(newMin);
 //            this.max.addValue(newMax);
@@ -273,21 +258,21 @@ public class StateView extends View {
     }
 
     public float getMin() {
-        return min.getFloat();
+        return (float) min.getValue();
     }
 
     public void setMin(float min) {
-        if (min != this.min.getFloat())
+        if (min != (float) this.min.getValue())
             invalidate();
         this.min.setValue(min);
     }
 
     public float getMax() {
-        return max.getFloat();
+        return (float) max.getValue();
     }
 
     public void setMax(float max) {
-        if (max != this.max.getFloat())
+        if (max != (float) this.max.getValue())
             invalidate();
         this.max.setValue(max);
     }
@@ -311,7 +296,7 @@ public class StateView extends View {
         } else if (depth >= 0) {
             this.depth--;
         }
-        if (states.size() > 0) {
+        if (states != null && states.size() > 0) {
             compressedStates = new ArrayList<>(states);
             compressedStates = StateExtractor.compressStates(compressedStates, true, depth);
         }
