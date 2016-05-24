@@ -28,8 +28,8 @@
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
-
         <activity android:name=".CountActivity" />
+        <activity android:name=".HelpActivity" />
         <activity android:name=".RecordActivity" />
         <activity android:name=".RecordActivityBak" />
         <activity android:name=".MainActivity">
@@ -40,6 +40,7 @@
         </activity>
 
         <service android:name=".MobileCountService" />
+        <service android:name=".MobileRecordService" />
         <service android:name="com.bitflake.counter.services.WearRecordService" />
         <!--<service android:name="com.bitflake.counter.services.WearCountService" />-->
         <service android:name=".VoiceFeedbackService" />
@@ -51,9 +52,9 @@
         <!--</intent-filter>-->
         <!--</receiver>-->
         <service android:name="com.bitflake.counter.services.WearBroadcastProxyService">
-            <intent-filter>
-                <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
-            </intent-filter>
+            <!--<intent-filter>-->
+            <!--<action android:name="com.google.android.gms.wearable.BIND_LISTENER" />-->
+            <!--</intent-filter>-->
         </service>
     </application>
 

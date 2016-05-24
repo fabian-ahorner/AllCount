@@ -9,5 +9,14 @@
     <string name="start_calibrating_long">Start recording by holding your phone still in the starting position</string>
     <string name="do_repetition">Do one repetition and move the phone back to the starting position</string>
     <string name="hold_still_at_start">Keep your phone still in the starting position</string>
-    <string name="delede_counter_warning">Are you sure? Counters without a name won\'t be saved!</string>
+    <string name="delete_counter_warning">Are you sure? Counters without a name won\'t be saved!</string>
+    <string name="help_1">Move your phone in the starting position. (e.g. put it in your pocket and get in push up position)</string>
+    <string name="help_2">Keep the phone still for a couple of seconds till it tells you to start recording. (Ensure that the volume is on)</string>
+    <string name="help_3">Start moving. Do one repetition of your exercise. If the exercise should be done for both sides (e.g. left and right leg for lunges), do both of them in the same recording.</string>
+    <string name="help_4">Finish the exercise by moving the phone back to its starting position and hold it still again for a couple of seconds till it tells you that it starts counting. Ensure that it is rotated correctly e.g. not up side down.</string>
+    <string name="help_5">After finishing the recording, AllCount will automatically start counting further repetitions.</string>
+    <string name="help_6">If you wan\'t to save an exercise simply give it a name and it will automatically show up in the list of your counters.</string>
+    <string name="help_7">If you wan\'t to remove a counter simply remove its name.</string>
+    <string name="record_counter">Record Counter</string>
+    <string name="action_help">Help</string>
 </resources>

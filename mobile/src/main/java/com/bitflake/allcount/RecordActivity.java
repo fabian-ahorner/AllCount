@@ -86,14 +86,7 @@ public class RecordActivity extends ServiceConnectedActivity implements RecordCo
 
     public void onFinishedRecording(Bundle data) {
         Bundle states = data.getBundle(DATA_STATES);
-        new CountServiceHelper(this).startCounting(states, 1);
-
-        Intent i = new Intent(this, MobileCountService.class);//createControlIntent();//
-        i.putExtra(CountConstants.DATA_COMMAND, CountConstants.CMD_START_COUNTING);
-        i.putExtra(CountConstants.DATA_STATES, states);
-        i.putExtra(CountConstants.DATA_COUNT_OFFSET, 1);
-        startService(i);
-
+//        new CountServiceHelper(this).startCounting(MobileCountService.class, states, 1);
         Intent intent = CountActivity.getStartIntent(this, states, true, 1);
         startActivity(intent);
         finish();

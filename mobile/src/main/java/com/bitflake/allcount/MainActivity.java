@@ -7,18 +7,17 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Spinner;
 
 import com.bitflake.allcount.db.CounterEntry;
 import com.bitflake.counter.ServiceConnectedActivity;
 import com.bitflake.counter.services.RecordServiceHelper;
-import com.bitflake.counter.services.WearCountService;
-import com.bitflake.counter.services.WearRecordService;
 import com.orm.query.Select;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class MainActivity extends ServiceConnectedActivity implements View.OnClickListener {
@@ -33,12 +32,27 @@ public class MainActivity extends ServiceConnectedActivity implements View.OnCli
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(this);
 
-//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-//        setSupportActionBar(toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        toolbar.setTitle(R.string.app_name);
+//        inflateMenu(R.menu.menu_main);
+//        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+//            @Override
+//            public boolean onMenuItemClick(MenuItem menuItem) {
+//
+//                switch (menuItem.getItemId()) {
+//                    case R.id.action_help:
+//                        showHelp();
+//                        return true;
+//                }
+//
+//                return false;
+//            }
+//        });
 
         ensureConnection(VoiceFeedbackService.class);
 //        ensureConnection(WearCountService.class);
-        ensureConnection(WearRecordService.class);
+        ensureConnection(MobileRecordService.class);
 
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
 
@@ -52,11 +66,28 @@ public class MainActivity extends ServiceConnectedActivity implements View.OnCli
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_help:
+                showHelp();
+                return true;
+        }
+        return false;
+    }
+
+    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.fab:
                 new RecordServiceHelper(this).startRecording(getDelay(), getDuration());
-                startService(new Intent(this, WearCountService.class));
+                startService(new Intent(this, MobileRecordService.class));
                 startActivity(new Intent(this, RecordActivity.class));
         }
     }
@@ -89,7 +120,15 @@ public class MainActivity extends ServiceConnectedActivity implements View.OnCli
 
         @Override
         protected void onPostExecute(List<CounterEntry> counters) {
+            if (counters.isEmpty()) {
+                showHelp();
+                finish();
+            }
             adapter.setCounters(counters);
         }
+    }
+
+    public void showHelp() {
+        startActivity(new Intent(MainActivity.this, HelpActivity.class));
     }
 }

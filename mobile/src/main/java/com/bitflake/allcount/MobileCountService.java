@@ -60,4 +60,5 @@ public class MobileCountService extends WearCountService {
         count += countOffset;
         notificationManager.notify(ONGOING_NOTIFICATION_ID, createNotification(count));
     }
+
 }

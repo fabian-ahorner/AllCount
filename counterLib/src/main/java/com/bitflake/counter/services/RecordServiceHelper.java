@@ -15,9 +15,14 @@ public class RecordServiceHelper extends ServiceHelper implements RecordConstant
         Intent i = createControlIntent();
 //        Intent i = new Intent(getContext(),RecordService.class);
         i.putExtra(DATA_COMMAND, CMD_START_RECORDING);
-        i.putExtra(DATA_DELAY_MS, delay);
-        i.putExtra(DATA_DURATION_MS, duration);
+//        i.putExtra(DATA_DELAY_MS, delay);
+//        i.putExtra(DATA_DURATION_MS, duration);
 //        getContext().startService(i);
+        sendBroadcast(i);
+    }
+    public void startRecording() {
+        Intent i = createControlIntent();
+        i.putExtra(DATA_COMMAND, CMD_START_RECORDING);
         sendBroadcast(i);
     }
 

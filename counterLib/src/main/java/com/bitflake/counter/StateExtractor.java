@@ -133,29 +133,44 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
         int i = 0;
         int id = 0;
         last = newStates.get(i++);
+        float combinedStates = 0;
         while (i < newStates.size()) {
             CountState next = newStates.get(i);
             double distance = last.getDistance(next);
             if (distance > minDistance) {
-                if (fake) {
-                    last.setNext(next);
-                } else {
-                    last.setId(id++);
-                    CountState transientState = new CountState(last, next, id++);
-                    last.setNext(transientState);
-                    newStates.add(i++, transientState);
-                }
+                combinedStates = 0;
+                last.setNext(next);
                 last = next;
                 i++;
             } else {
+                combinedStates++;
+                for (int s = 0; s < last.means.length; s++) {
+                    last.means[s] = last.means[s] *
+                            (combinedStates - 1f) / combinedStates + next.means[s] / combinedStates;
+                }
                 newStates.remove(i);
             }
+            last.setNext(null);
         }
 
-        last.setNext(null);
-        if (!fake)
+        if (!fake) {
+            i = 0;
+            id = 0;
+            last = newStates.get(i++);
+            while (i < newStates.size()) {
+                CountState next = newStates.get(i);
+                last.setId(id++);
+                CountState transientState = new CountState(last, next, id++);
+                last.setNext(transientState);
+                newStates.add(i++, transientState);
+                last = next;
+                i++;
+            }
             last.setId(id);
-        Log.d("my", "Compressed:" + newStates.size() + "/" + states.size());
+        }
+
+        if (!fake)
+            Log.d("my", "Compressed:" + newStates.size() + "/" + states.size());
         return newStates;
     }
 
@@ -206,9 +221,9 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
 //            interpolatedGradient += Math.abs(sTo.sd[j] - sFrom.sd[j])/2;
         }
 //        double gradientSimilarity = 2 * gradient * interpolatedGradient / (gradient * gradient + interpolatedGradient * interpolatedGradient);
-        double gradientSimilarity = gradient / interpolatedGradient;
-        double maxSimilarity = 1.2;
-        if ((gradientSimilarity > maxSimilarity || gradientSimilarity < 1 / maxSimilarity) && maxDistance > minDistance && landmark != -1) {
+        double gradientSimilarity = Math.abs(gradient / interpolatedGradient - 1);
+//        double maxSimilarity = (gradientSimilarity - 1);
+        if (gradientSimilarity > 0.2 && maxDistance > minDistance && landmark != -1) {
             compressedStates.addAll(getCompressedStates(states, from, landmark, minDistance, depth - 1));
             compressedStates.add(states.get(landmark));
             compressedStates.addAll(getCompressedStates(states, landmark, to, minDistance, depth - 1));

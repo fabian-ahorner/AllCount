@@ -61,9 +61,9 @@ public class VoiceFeedbackService extends Service implements TextToSpeech.OnInit
                 case EVENT_START_CALIBRATING:
                     speak(R.string.start_calibrating);
                     break;
-                case EVENT_FINISHED_RECORDING:
-                    speak(R.string.stop_recording);
-                    break;
+//                case EVENT_FINISHED_RECORDING:
+//                    speak(R.string.stop_recording);
+//                    break;
                 case EVENT_START_MOVING:
                     speak(R.string.start_recording);
                     break;

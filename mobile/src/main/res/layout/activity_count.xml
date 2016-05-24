@@ -85,6 +85,7 @@
             android:id="@+id/counterName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingTop="32dip"
             android:background="@null"
             android:gravity="center"
             android:hint="@string/counter_name"

@@ -48,7 +48,7 @@ public class StateView extends View {
     };
     private boolean isRegistered;
     private List<CountState> compressedStates;
-    private int depth;
+    private int depth = 100;
     private int stillFrames;
     private CountState firstState;
 
@@ -83,8 +83,8 @@ public class StateView extends View {
         }
         stateWith = 0;
 
-        compressedStates = new ArrayList<>(states);
-        compressedStates = StateExtractor.compressStates(compressedStates, true, depth);
+//        compressedStates = new ArrayList<>(states);
+//        compressedStates = StateExtractor.compressStates(compressedStates, true, depth);
         firstState = states.get(0);
     }
 
@@ -122,7 +122,7 @@ public class StateView extends View {
         super.onDraw(canvas);
         if (stateWith == 0 && states != null && states.size() > 1) {
             stateWith = getWidth() / (states.size() - 1);
-            paintStates.setPathEffect(new CornerPathEffect(getWidth() / 15));   // set the pathParticles effect when they join.
+//            paintStates.setPathEffect(new CornerPathEffect(getWidth() / 15));   // set the pathParticles effect when they join.
         }
         drawStates(canvas);
     }
@@ -131,7 +131,6 @@ public class StateView extends View {
 
         if (states != null) {
             float r = Math.min(stateWith / 5, getWidth() / 100);
-//            float r = getWidth() / 100;
 //            r *= 5;
             for (int s = 0; s < sensors; s++) {
                 path.reset();
@@ -146,9 +145,9 @@ public class StateView extends View {
                     if (path.isEmpty())
                         path.moveTo(x, y);
                     path.lineTo(x, y);
-//                    if (compressedStates != null && compressedStates.contains(states.get(state)) && s == 0)
-//                        canvas.drawLine(x1, 0, x1, getHeight(), paintStates);
-//                    canvas.drawCircle(x1, y, r / (states.get(state).isTransientState() ? 2 : 1), paintStates);
+//                    if (compressedStates != null && compressedStates.contains(states.get(state)) )
+//                        canvas.drawLine(x, 0, x, getHeight(), paintStates);
+                    canvas.drawCircle(x, y, r / (states.get(state).isTransientState() ? 2 : 1), paintStates);
                 }
                 paintStates.setAlpha(0xFF);
                 paintStates.setStyle(Paint.Style.STROKE);
@@ -287,20 +286,20 @@ public class StateView extends View {
         this.stateWith = stateWith;
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        if (event.getAction() != MotionEvent.ACTION_DOWN)
-            return false;
-        if (event.getX() > getWidth() / 2) {
-            this.depth++;
-        } else if (depth >= 0) {
-            this.depth--;
-        }
-        if (states != null && states.size() > 0) {
-            compressedStates = new ArrayList<>(states);
-            compressedStates = StateExtractor.compressStates(compressedStates, true, depth);
-        }
-        invalidate();
-        return true;
-    }
+//    @Override
+//    public boolean onTouchEvent(MotionEvent event) {
+//        if (event.getAction() != MotionEvent.ACTION_DOWN)
+//            return false;
+//        if (event.getX() > getWidth() / 2) {
+//            this.depth++;
+//        } else if (depth >= 0) {
+//            this.depth--;
+//        }
+//        if (states != null && states.size() > 0) {
+////            compressedStates = new ArrayList<>(states);
+////            compressedStates = StateExtractor.compressStates(compressedStates, true, depth);
+//        }
+//        invalidate();
+//        return true;
+//    }
 }

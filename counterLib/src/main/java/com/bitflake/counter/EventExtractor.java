@@ -94,7 +94,7 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
             double d = (startMax[sensor] - startMin[sensor]) / 2;
             double mean = startMax[sensor] - d;
 
-            if (Math.abs(m - mean) / d > 3) {
+            if (Math.abs(m - mean) / d > 4) {
                 return false;
             }
         }

@@ -100,7 +100,7 @@ public class CountService extends SensorService implements SensorCounter.CountLi
         i.putExtra(DATA_COUNT_PROGRESS, progress);
         particleCounts = counter.getParticleCounts(particleCounts);
         i.putExtra(DATA_PARTICLE_COUNT, particleCounts);
-        i.putExtra(DATA_LAST_STATE, counter.getLastState().toJSON());
+        i.putExtra(DATA_LAST_STATE, counter.getCurrentState().toJSON());
         stateScores = counter.getStateDistances(stateScores);
         i.putExtra(DATA_STATE_SCORES, stateScores);
         i.putExtra(DATA_MOST_LIKELY_STATE, mostLikelyState);

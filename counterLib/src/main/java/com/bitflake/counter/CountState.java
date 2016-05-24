@@ -246,12 +246,12 @@ public class CountState {
         }
         roulette.addElement(this);
         if (hasNext()) {
+            roulette.addElements(next);
             for (CountState s : next) {
                 if (s.isTransientState()) {
                     roulette.addElements(s.next);
                 }
             }
-            roulette.addElements(next);
         }
     }
 
@@ -259,7 +259,7 @@ public class CountState {
 //        CountState best = nextSelector.getBest();
 //        if (nextSelector.getBest().getId() > getId())
 //            return best;
-        return nextSelector.pickElement();
+        return nextSelector.pick();
     }
 
     public void updateRoulette() {
@@ -273,11 +273,17 @@ public class CountState {
         return next != null && next[0] != null;
     }
 
-    public double getLikelihood(CountState state) {
+    public double getLikelihoodInNeighbours(CountState state) {
         return nextSelector.getScore(state) / nextSelector.getTotal();
     }
 
-    public double getLikelihood() {
+    public double getLikelihoodOfDistance() {
+        if (getDistance() <= 0)
+            return 1;
+        return Math.min(1, getLocalDistance() / getDistance());
+    }
+
+    public double getLikelihoodInSequenze() {
         return likelihood;
     }
 
@@ -300,5 +306,9 @@ public class CountState {
                 s.setGlobalRoulette(globalRoulette);
             }
         }
+    }
+
+    public double getLocalDistance() {
+        return Math.max(1, getDistanceToNext());
     }
 }

@@ -193,7 +193,7 @@ public class RouletteWheel<T> {
             return roulette.pickAndRemoveElement(scoreProviderIndex);
         }
 
-        public T pickElement() {
+        public T pick() {
             return roulette.pickElement(scoreProviderIndex);
         }
 

@@ -42,6 +42,14 @@ public class CountServiceHelper extends ServiceHelper implements CountConstants 
         startCounting(states, 0);
     }
 
+    public void startCounting(Class<? extends CountService> service, Bundle states, int countOffset) {
+        Intent i = new Intent(getContext(), service);
+        i.putExtra(CountConstants.DATA_COMMAND, CountConstants.CMD_START_COUNTING);
+        i.putExtra(CountConstants.DATA_STATES, states);
+        i.putExtra(CountConstants.DATA_COUNT_OFFSET, countOffset);
+        getContext().startService(i);
+    }
+
     public void startCounting(Bundle states, int countOffset) {
         Intent i = createControlIntent();//new Intent(getContext(), CountService.class);//
         i.putExtra(DATA_COMMAND, CMD_START_COUNTING);
@@ -96,6 +104,16 @@ public class CountServiceHelper extends ServiceHelper implements CountConstants 
         }
         super.onReceiveBroadcast(intent);
     }
+
+    public void startServiceAndCounting(Class<? extends CountService> service, Bundle states, int countOffset) {
+        Intent i = new Intent(getContext(),
+                service);
+        i.putExtra(DATA_COMMAND, CMD_START_COUNTING);
+        i.putExtra(DATA_STATES, states);
+        i.putExtra(DATA_COUNT_OFFSET, countOffset);
+        getContext().startService(i);
+    }
+
 
     public interface CountEventListener {
 

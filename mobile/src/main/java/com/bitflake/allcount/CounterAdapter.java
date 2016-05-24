@@ -60,7 +60,7 @@ public class CounterAdapter extends RecyclerView.Adapter<CounterAdapter.ViewHold
             text = (TextView) v.findViewById(R.id.text1);
             vis = (StateView) v.findViewById(R.id.counterVis);
             v.setOnClickListener(this);
-            v.setOnLongClickListener(this);
+//            v.setOnLongClickListener(this);
         }
 
         public void bind(CounterEntry counter, boolean isLastUsed) {

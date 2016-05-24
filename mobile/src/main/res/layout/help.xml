@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dip"
+        android:layout_marginTop="24dip"
+        android:background="@color/colorAccent"
+        android:elevation="8dip"
+        android:paddingBottom="4dip"
+        android:paddingLeft="16dip"
+        android:paddingRight="8dip"
+        android:paddingTop="4dip"
+        android:text="Record Counter"
+        android:textSize="@dimen/text_small"
+        android:textStyle="bold" />
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="8dip"
+        android:paddingLeft="32dip"
+        android:paddingRight="32dip"
+        android:paddingTop="8dip"
+        android:text="@string/help_1"
+        android:textSize="@dimen/text_small"
+        android:textStyle="italic" />
+
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="32dip"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/custom_help_start" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="8dip"
+        android:paddingLeft="32dip"
+        android:paddingRight="32dip"
+        android:paddingTop="8dip"
+        android:text="@string/help_2"
+        android:textSize="@dimen/text_small"
+        android:textStyle="italic" />
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="8dip"
+        android:paddingLeft="32dip"
+        android:paddingRight="32dip"
+        android:paddingTop="8dip"
+        android:text="@string/help_3"
+        android:textSize="@dimen/text_small"
+        android:textStyle="italic" />
+
+    <ImageView
+        android:layout_width="128dip"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="32dip"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/custom_help_move" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="8dip"
+        android:paddingLeft="32dip"
+        android:paddingRight="32dip"
+        android:paddingTop="8dip"
+        android:text="@string/help_4"
+        android:textSize="@dimen/text_small"
+        android:textStyle="italic" />
+
+    <ImageView
+        android:layout_width="128dip"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="32dip"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/custom_help_stop" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="8dip"
+        android:paddingLeft="32dip"
+        android:paddingRight="32dip"
+        android:paddingTop="8dip"
+        android:text="@string/help_5"
+        android:textSize="@dimen/text_small"
+        android:textStyle="italic" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dip"
+        android:layout_marginTop="24dip"
+        android:background="@color/colorAccent"
+        android:elevation="8dip"
+        android:paddingBottom="4dip"
+        android:paddingLeft="16dip"
+        android:paddingRight="8dip"
+        android:paddingTop="4dip"
+        android:text="Save Counter"
+        android:textSize="@dimen/text_small"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="8dip"
+        android:paddingLeft="32dip"
+        android:paddingRight="32dip"
+        android:paddingTop="8dip"
+        android:text="@string/help_6"
+        android:textSize="@dimen/text_small"
+        android:textStyle="italic" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dip"
+        android:layout_marginTop="24dip"
+        android:background="@color/colorAccent"
+        android:elevation="8dip"
+        android:paddingBottom="4dip"
+        android:paddingLeft="16dip"
+        android:paddingRight="8dip"
+        android:paddingTop="4dip"
+        android:text="Delete Counter"
+        android:textSize="@dimen/text_small"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="48dip"
+        android:paddingBottom="8dip"
+        android:paddingLeft="32dip"
+        android:paddingRight="32dip"
+        android:paddingTop="8dip"
+        android:text="@string/help_7"
+        android:textSize="@dimen/text_small"
+        android:textStyle="italic" />
+</LinearLayout>

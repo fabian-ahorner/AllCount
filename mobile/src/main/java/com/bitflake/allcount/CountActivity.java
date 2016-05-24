@@ -17,16 +17,12 @@ import android.widget.TextView;
 
 import com.bitflake.allcount.db.CounterEntry;
 import com.bitflake.counter.Constances;
-import com.bitflake.counter.PatternView;
 import com.bitflake.counter.ServiceConnectedActivity;
 import com.bitflake.counter.CountState;
-import com.bitflake.counter.StateExtractor;
 import com.bitflake.counter.StateView;
 import com.bitflake.counter.services.CountConstants;
 import com.bitflake.counter.services.WearCountService;
 import com.bitflake.counter.services.CountServiceHelper;
-
-import java.util.List;
 
 
 public class CountActivity extends ServiceConnectedActivity implements CountConstants {
@@ -144,7 +140,7 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
 
         this.countServiceHelper = new CountServiceHelper(this);
         if (startCounting) {
-            startServiceAndCounting();
+            countServiceHelper.startServiceAndCounting(MobileCountService.class, states, countOffset);
             fab.setImageResource(android.R.drawable.ic_media_pause);
         } else {
             startService(new Intent(this, MobileCountService.class));
@@ -165,15 +161,6 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
             counterEntry.delete();
             counterEntry = null;
         }
-    }
-
-    private void startServiceAndCounting() {
-        Intent i = new Intent(this,
-                MobileCountService.class);
-        i.putExtra(DATA_COMMAND, CMD_START_COUNTING);
-        i.putExtra(DATA_STATES, states);
-        i.putExtra(DATA_COUNT_OFFSET, countOffset);
-        startService(i);
     }
 
     private void resetCounter() {
@@ -255,7 +242,7 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
         } else {
             hasPressedBack = true;
             snack = Snackbar
-                    .make(tCount, R.string.delede_counter_warning, Snackbar.LENGTH_INDEFINITE);
+                    .make(tCount, R.string.delete_counter_warning, Snackbar.LENGTH_INDEFINITE);
             snack.setDuration(5000);
             snack.show();
 //            tCount.postDelayed(new Runnable() {

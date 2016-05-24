@@ -2,10 +2,7 @@ package com.bitflake.counter;
 
 import android.util.Log;
 
-import com.bitflake.counter.tools.Stats;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class Particle {
     private static final double JITTER = 0.1;
@@ -27,23 +24,28 @@ public class Particle {
     }
 
     public void move() {
+        likelihood = 0;
         state.removeParticle();
-        int lastId = state.getId();
-        state = state.getPossibleNext();
-//        likelihood *= state.getLikelihood(state);
-//        if (state.getId() != lastId)
-        likelihood += Math.log(state.getLikelihood(state));
-//        if (state.getId() < lastId)
-//            cumulatedError++;
-//            likelihood += Math.log(0.1);
-//        else
-//            likelihood += Math.log(0.45);
+//        int lastId = state.getId();
+//        CountState lastState = state;
+        CountState newState;
+        if (Math.random() < 0.9)
+            newState = state.getPossibleNext();
+        else
+            newState = state;
+        likelihood += Math.log(down(state.getLikelihoodInNeighbours(newState)));
+//        likelihood += Math.log(state.getLikelihoodInSequenze());
 //        if (state.getId() != 0)
-        likelihood += Math.log(state.getLikelihood());
+        likelihood += Math.log(down(newState.getLikelihoodOfDistance()));
 
-        state.addParticle();
-        cumulatedError += Math.pow(state.getDistance(), 2);
-        path.add(state.toString());
+        newState.addParticle();
+        cumulatedError += Math.pow(newState.getDistance(), 2);
+        path.add(newState.toString());
+        state = newState;
+    }
+
+    private double down(double val) {
+        return val;//Math.max(0.01, Math.round(val * 10) / 10);
     }
 
     private void moveToNext() {
@@ -59,16 +61,18 @@ public class Particle {
     public void setState(CountState state) {
         this.state.removeParticle();
         this.state = state;
-        this.cumulatedError = state.getDistance();
+        this.cumulatedError = Math.pow(state.getDistance(), 2);
         this.likelihood = 0;
         state.addParticle();
         path.clear();
+        likelihood += Math.log(down(state.getLikelihoodInNeighbours(state)));
+        likelihood += Math.log(down(state.getLikelihoodOfDistance()));
 //        path.add(Arrays.toString(Thread.currentThread().getStackTrace()));
 //        path.add(String.valueOf(cumulatedError));
     }
 
     public double getCumulatedError() {
-        return likelihood;
+        return cumulatedError;
     }
 
     public double getDistance() {

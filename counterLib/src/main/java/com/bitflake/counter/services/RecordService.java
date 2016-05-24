@@ -156,7 +156,6 @@ public class RecordService extends SensorService implements RecordConstants, Eve
 
     @Override
     public void onStartRecording(double[] startMin, double[] startMax) {
-//        handler.postDelayed(rFinishRecording, duration);
         broadcastStatus(EVENT_START_MOVING);
     }
 
@@ -173,7 +172,6 @@ public class RecordService extends SensorService implements RecordConstants, Eve
 
     @Override
     public void onNewState(CountState states) {
-//        Log.d("my", "ERROR: " + Arrays.toString(errors));
         Intent i = new Intent(INTENT_RECORD_PROGRESS);
         i.putExtra(DATA_LAST_STATE, states.toJSON());
         sendBroadcast(i);
@@ -184,5 +182,9 @@ public class RecordService extends SensorService implements RecordConstants, Eve
         Intent i = new Intent(INTENT_RECORD_PROGRESS);
         i.putExtra(DATA_STILLNESS, stillness);
         sendBroadcast(i);
+    }
+
+    public Bundle getStates() {
+        return states;
     }
 }

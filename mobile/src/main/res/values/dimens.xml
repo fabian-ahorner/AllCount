@@ -5,4 +5,7 @@
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="fab_half">28dip</dimen>
     <dimen name="line_width">28dip</dimen>
+    <dimen name="text_small">18sp</dimen>
+    <dimen name="text_medium">22sp</dimen>
+    <dimen name="text_large">28sp</dimen>
 </resources>
