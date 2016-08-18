@@ -8,8 +8,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.bitflake.allcount.db.CounterEntry;
-import com.bitflake.counter.CountState;
-import com.bitflake.counter.StateExtractor;
+import com.bitflake.counter.algo.shared.old.CountState;
+import com.bitflake.counter.algo.shared.old.StateExtractor;
 import com.bitflake.counter.StateView;
 
 import java.util.Arrays;

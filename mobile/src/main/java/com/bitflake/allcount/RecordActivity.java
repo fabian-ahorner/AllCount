@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.TextView;
 
+import com.bitflake.counter.Constances;
 import com.bitflake.counter.HorizontalPicker;
 import com.bitflake.counter.ServiceConnectedActivity;
 import com.bitflake.counter.StateView;
@@ -19,6 +20,8 @@ import com.bitflake.counter.services.RecordConstants;
 import com.bitflake.counter.services.RecordServiceHelper;
 import com.bitflake.counter.services.WearRecordService;
 import com.bitflake.counter.tools.TextChangeAnimator;
+
+import java.io.File;
 
 public class RecordActivity extends ServiceConnectedActivity implements RecordConstants, RecordServiceHelper.RecordEventListener {
     private View progress;
@@ -87,7 +90,7 @@ public class RecordActivity extends ServiceConnectedActivity implements RecordCo
     public void onFinishedRecording(Bundle data) {
         Bundle states = data.getBundle(DATA_STATES);
 //        new CountServiceHelper(this).startCounting(MobileCountService.class, states, 1);
-        Intent intent = CountActivity.getStartIntent(this, states, true, 1);
+        Intent intent = CountActivity.getStartIntent(this, states, true, 0);
         startActivity(intent);
         finish();
     }

@@ -3,18 +3,16 @@ package com.bitflake.allcount;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.CornerPathEffect;
 import android.graphics.Outline;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
 import android.os.Build;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewOutlineProvider;
 
-import com.bitflake.counter.CountState;
+import com.bitflake.counter.algo.shared.old.CountState;
 
 import java.util.List;
 

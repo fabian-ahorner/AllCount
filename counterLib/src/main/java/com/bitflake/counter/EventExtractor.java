@@ -2,7 +2,9 @@ package com.bitflake.counter;
 
 import android.util.Log;
 
-import com.bitflake.counter.tools.ArrayValueHelper;
+import com.bitflake.counter.algo.shared.old.CountState;
+import com.bitflake.counter.algo.shared.old.SlidingWindow;
+import com.bitflake.counter.algo.shared.old.ArrayValueHelper;
 
 import java.util.ArrayList;
 import java.util.List;

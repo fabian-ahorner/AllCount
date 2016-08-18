@@ -1,7 +1,8 @@
-package com.bitflake.counter.tools;
+package com.bitflake.counter.algo.shared.old;
 
-import com.bitflake.counter.CountState;
-import com.bitflake.counter.Particle;
+import com.bitflake.counter.algo.shared.old.CountState;
+import com.bitflake.counter.algo.shared.old.Particle;
+import com.bitflake.counter.algo.shared.old.RouletteWheel;
 
 public class ScoreProviders {
     public static final RouletteWheel.ScoreProvider<Particle> PARTICLE_WEAK_HISTORY = new RouletteWheel.ScoreProvider<Particle>() {

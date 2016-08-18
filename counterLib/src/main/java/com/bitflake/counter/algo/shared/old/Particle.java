@@ -1,4 +1,4 @@
-package com.bitflake.counter;
+package com.bitflake.counter.algo.shared.old;
 
 import android.util.Log;
 

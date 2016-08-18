@@ -1,6 +1,9 @@
-package com.bitflake.counter;
+package com.bitflake.counter.algo.shared.old;
 
 import android.util.Log;
+
+import com.bitflake.counter.algo.shared.old.CountState;
+import com.bitflake.counter.algo.shared.old.SlidingWindow;
 
 import java.util.ArrayList;
 import java.util.Comparator;

@@ -6,8 +6,10 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.bitflake.counter.Constances;
-import com.bitflake.counter.CountState;
-import com.bitflake.counter.SensorCounter;
+import com.bitflake.counter.algo.shared.old.CountState;
+import com.bitflake.counter.algo.shared.old.SensorCounter;
+
+import java.io.File;
 
 public class CountService extends SensorService implements SensorCounter.CountListener, CountConstants {
     private SensorCounter counter = new SensorCounter();
@@ -27,6 +29,7 @@ public class CountService extends SensorService implements SensorCounter.CountLi
         statusBundle.putInt(DATA_COUNT, 0);
         statusBundle.putBoolean(DATA_IS_COUNTING, false);
         registerReceiver(new IntentFilter(Constances.INTENT_COUNT_CONTROL));
+        sensor.setFile(new File(getCacheDir(), Constances.DATA_FILE_RECORD));
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.bitflake.counter.tools;
+package com.bitflake.counter.algo.shared.old;
 
 import java.util.ArrayList;
 import java.util.Arrays;

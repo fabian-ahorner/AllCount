@@ -85,11 +85,11 @@
             android:id="@+id/counterName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="32dip"
             android:background="@null"
             android:gravity="center"
             android:hint="@string/counter_name"
             android:padding="16dip"
+            android:paddingTop="32dip"
             android:singleLine="true"
             android:textAppearance="?android:textAppearanceLarge" />
         <!--</android.support.design.widget.TextInputLayout>-->
@@ -116,6 +116,19 @@
             android:background="?android:selectableItemBackground"
             android:src="@android:drawable/ic_menu_revert"
             android:visibility="invisible" />
+
+        <ImageButton
+            android:id="@+id/share"
+            android:layout_width="64dip"
+            android:layout_height="64dip"
+            android:layout_alignParentRight="true"
+            android:layout_alignTop="@+id/progress"
+            android:layout_centerVertical="true"
+            android:layout_margin="32dip"
+            android:background="?android:selectableItemBackground"
+            android:src="@android:drawable/ic_menu_share"
+            android:visibility="invisible"
+            />
     </RelativeLayout>
 </android.support.design.widget.CoordinatorLayout>
 

@@ -19,4 +19,12 @@
     <string name="help_7">If you wan\'t to remove a counter simply remove its name.</string>
     <string name="record_counter">Record Counter</string>
     <string name="action_help">Help</string>
+
+    <string-array name="exercise">
+        <item>Squats</item>
+        <item>PushUps</item>
+        <item>Lunges</item>
+        <item>Situps</item>
+        <item>Other</item>
+    </string-array>
 </resources>

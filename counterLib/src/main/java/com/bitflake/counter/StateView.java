@@ -7,20 +7,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Canvas;
-import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 
+import com.bitflake.counter.algo.shared.old.CountState;
 import com.bitflake.counter.services.CountConstants;
 import com.bitflake.counter.services.RecordConstants;
-import com.bitflake.counter.tools.ArrayValueHelper;
-import com.bitflake.counter.tools.ValueHelper;
+import com.bitflake.counter.algo.shared.old.ValueHelper;
 
 import java.util.ArrayList;
 import java.util.List;

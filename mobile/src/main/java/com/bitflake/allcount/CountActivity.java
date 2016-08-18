@@ -18,11 +18,13 @@ import android.widget.TextView;
 import com.bitflake.allcount.db.CounterEntry;
 import com.bitflake.counter.Constances;
 import com.bitflake.counter.ServiceConnectedActivity;
-import com.bitflake.counter.CountState;
+import com.bitflake.counter.algo.shared.old.CountState;
 import com.bitflake.counter.StateView;
 import com.bitflake.counter.services.CountConstants;
 import com.bitflake.counter.services.WearCountService;
 import com.bitflake.counter.services.CountServiceHelper;
+
+import java.io.File;
 
 
 public class CountActivity extends ServiceConnectedActivity implements CountConstants {
@@ -48,6 +50,9 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
     private EditText counterName;
     private boolean hasPressedBack;
     private Snackbar snack;
+    private File currentFile;
+    private View bShare;
+    private File recordFile;
 
     public static Intent getStartIntent(Context context, Bundle states, boolean start, int count) {
         Intent i = new Intent(context, CountActivity.class);
@@ -89,6 +94,13 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
             @Override
             public void onClick(View view) {
                 resetCounter();
+            }
+        });
+        bShare = findViewById(R.id.share);
+        bShare.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                shareDataFile();
             }
         });
         tCount = (TextView) findViewById(R.id.tCount);
@@ -166,6 +178,7 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
     private void resetCounter() {
         tCount.setText("0");
         bReset.setVisibility(View.INVISIBLE);
+        bShare.setVisibility(View.INVISIBLE);
         countOffset = 0;
     }
 
@@ -187,6 +200,7 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
         if (isCounting) {
             countServiceHelper.stopCounting();
             fab.setImageResource(android.R.drawable.ic_media_play);
+            currentFile = new File(getCacheDir(), Constances.DATA_FILE_COUNT);
         } else {
             if (counterEntry == null) {
                 countServiceHelper.startCounting(states, countOffset);
@@ -197,6 +211,57 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
             fab.setImageResource(android.R.drawable.ic_media_pause);
             startService(new Intent(this, VoiceFeedbackService.class));
         }
+    }
+
+    private void shareDataFile() {
+
+        ShareDialog dialog = new ShareDialog();
+        dialog.show(getFragmentManager(), "NoticeDialogFragment");
+
+//        if (currentFile != null) {
+//            long time = System.currentTimeMillis();
+//            String fileName = String.format(Constances.DATA_FILE_FORMAT,
+//                    counterName.getText().toString(),
+//                    countOffset, time);
+//            if (recordFile != null) {
+//                String recName = String.format(Constances.DATA_FILE_FORMAT_REC,
+//                        counterName.getText().toString(),
+//                        countOffset, time);
+//                recordFile.renameTo(new File(getCacheDir(), recName));
+//                recordFile = new File(getCacheDir(), recName);
+//            }
+//            File tmpFile = new File(getCacheDir(), fileName);
+//            currentFile.renameTo(tmpFile);
+//            currentFile = tmpFile;
+//
+////            final Uri uri = FileProvider.getUriForFile(this, "com.bitflake.allcount.fileprovider", currentFile);
+//// create an intent, so the user can choose which application he/she wants to use to share this file
+////            final Intent intent = ShareCompat.IntentBuilder.from(this)
+////                    .setType("text/plain")
+////                    .setSubject(currentFile.getName())
+////                    .addEmailTo("f.ahorner@gmail.com")
+//////                    .setStream(uri)
+////                    .setChooserTitle("Share with...")
+////                    .createChooserIntent()
+////                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET)
+////                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+//            Intent intent = new Intent(Intent.ACTION_SEND_MULTIPLE);
+//
+//            intent.setType("text/plain");
+//            intent.putExtra(android.content.Intent.EXTRA_EMAIL,
+//                    new String[]{"f.ahorner@gmail.com"});
+//            intent.putExtra(Intent.EXTRA_SUBJECT, currentFile.getName());
+//
+//            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+//            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+//            ArrayList<Uri> uris = new ArrayList<Uri>();
+//            uris.add(FileProvider.getUriForFile(this, "com.bitflake.allcount.fileprovider", currentFile));
+//            if (recordFile != null)
+//                uris.add(FileProvider.getUriForFile(this, "com.bitflake.allcount.fileprovider", recordFile));
+//            intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+//
+//            startActivity(intent);
+//        }
     }
 
     private BroadcastReceiver dataReceiver = new BroadcastReceiver() {
@@ -210,6 +275,7 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
                 CountActivity.this.isCounting = isCounting;
                 fab.setImageResource(isCounting ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play);
                 bReset.setVisibility(isCounting || count == 0 ? View.INVISIBLE : View.VISIBLE);
+                bShare.setVisibility(isCounting || count == 0 ? View.INVISIBLE : View.VISIBLE);
             }
             String sCount = String.valueOf(count);
             tCount.setText(sCount);

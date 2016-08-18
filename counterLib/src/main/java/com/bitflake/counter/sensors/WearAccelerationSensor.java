@@ -2,9 +2,9 @@ package com.bitflake.counter.sensors;
 
 
 import android.content.Context;
-import android.os.Bundle;
 import android.util.Log;
 
+import com.bitflake.counter.algo.shared.old.SensorDataProvider;
 import com.bitflake.counter.wear.ChannelHelper;
 import com.bitflake.counter.wear.WearConnectionManager;
 import com.google.android.gms.wearable.Channel;
@@ -43,7 +43,7 @@ public class WearAccelerationSensor extends SensorDataProvider implements Channe
     }
 
     @Override
-    void start() {
+    public void start() {
         WearConnectionManager.getInstance().startService("com.bitflake.allcount.DataMapRecordService", null);
         Wearable.DataApi.addListener(WearManager.getInstance().getGoogleClient(), this);
 //        if (out != null)
@@ -63,7 +63,7 @@ public class WearAccelerationSensor extends SensorDataProvider implements Channe
     }
 
     @Override
-    void stop() {
+    public void stop() {
         WearConnectionManager.getInstance().stopService("com.bitflake.allcount.DataMapRecordService", null);
         Wearable.DataApi.removeListener(WearManager.getInstance().getGoogleClient(), this);
         if (out != null)

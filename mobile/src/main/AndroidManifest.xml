@@ -40,6 +40,7 @@
         </activity>
 
         <service android:name=".MobileCountService" />
+        <service android:name="com.bitflake.counter.services.ProxySensorService" />
         <service android:name=".MobileRecordService" />
         <service android:name="com.bitflake.counter.services.WearRecordService" />
         <!--<service android:name="com.bitflake.counter.services.WearCountService" />-->
@@ -56,6 +57,18 @@
             <!--<action android:name="com.google.android.gms.wearable.BIND_LISTENER" />-->
             <!--</intent-filter>-->
         </service>
+
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="com.bitflake.allcount.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/fileprovider" />
+
+        </provider>
     </application>
 
 </manifest>

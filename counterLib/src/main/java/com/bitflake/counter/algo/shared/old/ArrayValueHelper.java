@@ -1,6 +1,5 @@
-package com.bitflake.counter.tools;
+package com.bitflake.counter.algo.shared.old;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 
 public abstract class ArrayValueHelper {

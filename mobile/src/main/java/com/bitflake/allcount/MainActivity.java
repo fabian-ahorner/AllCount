@@ -15,6 +15,7 @@ import android.widget.Spinner;
 
 import com.bitflake.allcount.db.CounterEntry;
 import com.bitflake.counter.ServiceConnectedActivity;
+import com.bitflake.counter.services.ProxySensorService;
 import com.bitflake.counter.services.RecordServiceHelper;
 import com.orm.query.Select;
 
@@ -63,6 +64,7 @@ public class MainActivity extends ServiceConnectedActivity implements View.OnCli
         // specify an adapter (see also next example)
         adapter = new CounterAdapter();
         recyclerView.setAdapter(adapter);
+        startService(new Intent(this, ProxySensorService.class));
     }
 
     @Override
@@ -130,5 +132,11 @@ public class MainActivity extends ServiceConnectedActivity implements View.OnCli
 
     public void showHelp() {
         startActivity(new Intent(MainActivity.this, HelpActivity.class));
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        stopService(new Intent(this, ProxySensorService.class));
     }
 }

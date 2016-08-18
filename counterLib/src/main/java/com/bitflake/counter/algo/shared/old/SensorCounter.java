@@ -1,9 +1,6 @@
-package com.bitflake.counter;
+package com.bitflake.counter.algo.shared.old;
 
 import android.util.Log;
-
-import com.bitflake.counter.tools.RouletteWheel;
-import com.bitflake.counter.tools.ScoreProviders;
 
 import java.util.ArrayList;
 import java.util.List;

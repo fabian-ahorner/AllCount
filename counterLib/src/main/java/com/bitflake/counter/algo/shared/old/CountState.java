@@ -1,9 +1,7 @@
-package com.bitflake.counter;
+package com.bitflake.counter.algo.shared.old;
 
 import android.os.Bundle;
 
-import com.bitflake.counter.tools.RouletteWheel;
-import com.bitflake.counter.tools.ScoreProviders;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;

@@ -6,6 +6,8 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
+import com.bitflake.counter.algo.shared.old.SensorDataProvider;
+
 public class LocalAccelerationSensor extends SensorDataProvider implements SensorEventListener {
     private final SensorManager sensorManager;
     private final Sensor sensor;

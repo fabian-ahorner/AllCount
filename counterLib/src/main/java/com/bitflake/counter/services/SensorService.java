@@ -2,15 +2,14 @@ package com.bitflake.counter.services;
 
 import android.os.PowerManager;
 
-import com.bitflake.counter.SlidingWindow;
+import com.bitflake.counter.algo.shared.old.SlidingWindow;
 import com.bitflake.counter.sensors.LocalAccelerationSensor;
-import com.bitflake.counter.sensors.SensorDataProvider;
-import com.bitflake.counter.sensors.SensorValueListener;
-import com.bitflake.counter.sensors.WearAccelerationSensor;
+import com.bitflake.counter.algo.shared.old.SensorDataProvider;
+import com.bitflake.counter.algo.shared.old.SensorValueListener;
 
 public class SensorService extends BroadcastReceiverService implements SensorValueListener {
     protected SlidingWindow window = new SlidingWindow(3, 20);
-    private SensorDataProvider sensor;
+    protected SensorDataProvider sensor;
     private PowerManager.WakeLock mWakeLock;
 
     @Override

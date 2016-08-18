@@ -5,9 +5,12 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 
-import com.bitflake.counter.StateExtractor;
-import com.bitflake.counter.CountState;
+import com.bitflake.counter.Constances;
+import com.bitflake.counter.algo.shared.old.StateExtractor;
+import com.bitflake.counter.algo.shared.old.CountState;
 import com.bitflake.counter.EventExtractor;
+
+import java.io.File;
 
 public class RecordService extends SensorService implements RecordConstants, EventExtractor.RecordingStatusListener {
     private Handler handler = new Handler();
@@ -36,6 +39,7 @@ public class RecordService extends SensorService implements RecordConstants, Eve
         super.onCreate();
         setAnalyser(stateExtractor);
         super.registerReceiver(new IntentFilter(INTENT_RECORD_CONTROL));
+        sensor.setFile(new File(getCacheDir(), Constances.DATA_FILE_COUNT));
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.bitflake.counter.tools;
+package com.bitflake.counter.algo.shared.old;
 
 public abstract class ValueHelper {
     private double value;
