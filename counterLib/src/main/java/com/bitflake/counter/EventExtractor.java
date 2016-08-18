@@ -3,8 +3,8 @@ package com.bitflake.counter;
 import android.util.Log;
 
 import com.bitflake.counter.algo.shared.SlidingWindow;
-import com.bitflake.counter.algo.shared.old.CountState;
-import com.bitflake.counter.algo.shared.old.ArrayValueHelper;
+import com.bitflake.counter.algo.shared.used.CountState;
+import com.bitflake.counter.algo.shared.used.tools.ArrayValueHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +46,7 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
 
     @Override
     public void analyseWindow(double[] values) {
-        CountState state = new CountState(values, null);
+        CountState state = new CountState(values);
         states.add(state);
         statesObserved++;
         float stillness = isStill();

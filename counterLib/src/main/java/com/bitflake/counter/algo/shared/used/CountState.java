@@ -2,6 +2,8 @@ package com.bitflake.counter.algo.shared.used;
 
 import com.bitflake.counter.algo.shared.used.tools.RouletteWheel;
 import com.bitflake.counter.algo.shared.used.tools.ScoreProviders;
+import com.google.gson.annotations.Expose;
+
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 
 import java.util.HashSet;
@@ -13,11 +15,15 @@ public class CountState {
     private MultivariateNormalDistribution dist;
     private double[][] covariance;
     private double amp;
+    @Expose
     public double[] means;
+    @Expose
     private CountState[] next;
     private Set<CountState> previous;
+    @Expose
     private int id;
     private double distanceToNext = 0;
+    @Expose
     private boolean transientState;
     private double distance;
     private int particleCount = 0;
@@ -170,7 +176,7 @@ public class CountState {
             this.previous = new HashSet<>();
         this.previous.add(previous);
 //        if (this.getNext() == null)
-            distanceToNext = Math.max(distanceToNext, getDistance(previous.means));
+        distanceToNext = Math.max(distanceToNext, getDistance(previous.means));
     }
 
     @Override

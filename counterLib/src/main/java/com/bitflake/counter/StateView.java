@@ -14,7 +14,7 @@ import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.bitflake.counter.algo.shared.old.CountState;
+import com.bitflake.counter.algo.shared.used.CountState;
 import com.bitflake.counter.services.CountConstants;
 import com.bitflake.counter.services.RecordConstants;
 import com.bitflake.counter.algo.shared.old.ValueHelper;

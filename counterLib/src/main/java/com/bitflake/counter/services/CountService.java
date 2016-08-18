@@ -6,8 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.bitflake.counter.Constances;
-import com.bitflake.counter.algo.shared.old.CountState;
-import com.bitflake.counter.algo.shared.old.SensorCounter;
+import com.bitflake.counter.algo.shared.used.count.SensorCounter;
 import com.bitflake.counter.tools.CountStateHelper;
 
 import java.io.File;

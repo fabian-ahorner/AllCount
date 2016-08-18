@@ -6,9 +6,9 @@ import android.os.Bundle;
 import android.os.Handler;
 
 import com.bitflake.counter.Constances;
-import com.bitflake.counter.algo.shared.old.StateExtractor;
-import com.bitflake.counter.algo.shared.old.CountState;
 import com.bitflake.counter.EventExtractor;
+import com.bitflake.counter.algo.shared.used.CountState;
+import com.bitflake.counter.algo.shared.used.record.StateExtractor;
 import com.bitflake.counter.tools.CountStateHelper;
 
 import java.io.File;
