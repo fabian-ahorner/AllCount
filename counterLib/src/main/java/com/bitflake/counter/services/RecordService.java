@@ -9,6 +9,7 @@ import com.bitflake.counter.Constances;
 import com.bitflake.counter.algo.shared.old.StateExtractor;
 import com.bitflake.counter.algo.shared.old.CountState;
 import com.bitflake.counter.EventExtractor;
+import com.bitflake.counter.tools.CountStateHelper;
 
 import java.io.File;
 
@@ -170,14 +171,14 @@ public class RecordService extends SensorService implements RecordConstants, Eve
         stopListening();
         status = STATUS_FINISHED;
         stateExtractor.compressStates();
-        this.states = CountState.toBundle(stateExtractor.getStates());
+        this.states = CountStateHelper.toBundle(stateExtractor.getStates());
         broadcastStates();
     }
 
     @Override
     public void onNewState(CountState states) {
         Intent i = new Intent(INTENT_RECORD_PROGRESS);
-        i.putExtra(DATA_LAST_STATE, states.toJSON());
+        i.putExtra(DATA_LAST_STATE, CountStateHelper.toJSON(states));
         sendBroadcast(i);
     }
 

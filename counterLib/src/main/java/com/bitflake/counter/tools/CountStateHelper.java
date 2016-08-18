@@ -14,7 +14,7 @@ public class CountStateHelper {
     private static Bundle toBundle(CountState state) {
         Bundle b = new Bundle();
         b.putDoubleArray("means", state.means);
-        b.putDoubleArray("sd", state.sd);
+//        b.putDoubleArray("sd", state.sd);
         b.putInt("id", state.getId());
         if (state.getNext() != null)
             b.putInt("next", state.getNext().getId());

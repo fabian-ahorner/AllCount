@@ -1,4 +1,4 @@
-package com.bitflake.counter.algo.shared;
+package com.bitflake.counter.algo.shared.used;
 
 /**
  * Created by fahor on 11/07/2016.

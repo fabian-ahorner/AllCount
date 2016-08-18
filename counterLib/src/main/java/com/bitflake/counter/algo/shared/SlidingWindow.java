@@ -1,4 +1,4 @@
-package com.bitflake.counter.algo.shared.old;
+package com.bitflake.counter.algo.shared;
 
 import com.bitflake.counter.algo.shared.old.CountState;
 
@@ -13,6 +13,7 @@ public class SlidingWindow {
     private int windowPosition;
     private WindowAnalyser analyser;
     private long lastRun = 0;
+    private long time = -1;
 
     /**
      * @param sensorCount
@@ -23,7 +24,7 @@ public class SlidingWindow {
         sums = new double[sensorCount];
         pos = new int[sensorCount];
         windowPosition = 0;
-        lastRun = System.nanoTime();
+        lastRun = 0;
         windowDuration = (long) (1000000000 / analyseFrequency);
     }
 
@@ -32,7 +33,7 @@ public class SlidingWindow {
             pos[sensor] = 0;
             sums[sensor] = 0;
         }
-        lastRun = System.nanoTime();
+        lastRun = getCurTime();
     }
 
     public void addValue(int sensor, double value) {
@@ -48,7 +49,7 @@ public class SlidingWindow {
     private void analyseIfTimePassed() {
         if (getElapsedTime() > windowDuration) {
             analyseWindow();
-            lastRun = System.nanoTime();
+            lastRun = getCurTime();
         }
     }
 
@@ -61,30 +62,45 @@ public class SlidingWindow {
     private void analyseWindow() {
         if (analyser != null) {
             double[] means = new double[window.length];
-            double[] var = new double[means.length];
-            double[] sd = new double[means.length];
+//            double[] var = used double[means.length];
+//            double[] sd = used double[means.length];
 
             for (int sensor = 0; sensor < window.length; sensor++) {
                 if (pos[sensor] > 0) {
                     means[sensor] = sums[sensor] / pos[sensor];
-                    for (int i = 0; i < pos[sensor]; i++) {
-                        var[sensor] += Math.pow(window[sensor][i] - means[sensor], 2);
-                    }
-                    var[sensor] /= pos[sensor];
-                    sd[sensor] = Math.sqrt(var[sensor]);
+//                    for (int i = 0; i < pos[sensor]; i++) {
+//                        var[sensor] += Math.pow(window[sensor][i] - means[sensor], 2);
+//                    }
+//                    var[sensor] /= pos[sensor];
+//                    sd[sensor] = Math.sqrt(var[sensor]);
                 }
             }
-            analyser.analyseWindow(new CountState(means, sd));
+            analyser.analyseWindow(means);
         }
         resetWindow();
     }
 
     public long getElapsedTime() {
-        return System.nanoTime() - lastRun;
+        return getCurTime() - lastRun;
+    }
+
+    public void setTime(long time) {
+        this.time = time;
+    }
+
+    public long getCurTime() {
+        return time < 0 ? System.nanoTime() : time;
     }
 
     public interface WindowAnalyser {
-        void analyseWindow(CountState state);
+        void analyseWindow(double[] means);
+    }
+
+
+    public interface CountWindowAnalyser extends WindowAnalyser {
+        int getCount();
+
+        void reset();
     }
 
     public void setAnalyser(WindowAnalyser analyser) {

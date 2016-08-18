@@ -1,7 +1,10 @@
-package com.bitflake.counter.algo.shared.old;
-
+package com.bitflake.counter.algo.shared.used.record;
 
 import com.bitflake.counter.algo.shared.SlidingWindow;
+import com.bitflake.counter.algo.shared.used.CountSettings;
+import com.bitflake.counter.algo.shared.used.CountState;
+import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
+import org.apache.commons.math3.stat.descriptive.MultivariateSummaryStatistics;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -11,7 +14,7 @@ import java.util.PriorityQueue;
 public class StateExtractor implements SlidingWindow.WindowAnalyser {
     public static final int STILL_SIZE = 40;
     /**
-     * The most similar states are stored first
+     * The most similar elements are stored first
      */
     private static Comparator<CountState> mergeComparator = new Comparator<CountState>() {
         @Override
@@ -37,9 +40,10 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
     }
 
     @Override
-    public void analyseWindow(double[] values) {
-        CountState state = new CountState(values, null);
+    public void analyseWindow(double[] means) {
+        CountState state = new CountState(means);
         state.setId(lastStateId++);
+        state.setTime(lastStateId);
         states.add(state);
 
 //        checkIfStill();
@@ -53,15 +57,15 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
     }
 
 //    private void checkIfStill() {
-//        if (states.size() > STILL_SIZE) {
+//        if (elements.size() > STILL_SIZE) {
 //            double[] minOfMax = used double[3];
 //            double[] maxOfMax = used double[3];
 //            double[] minOfMin = used double[3];
 //            double[] maxOfMin = used double[3];
 //            boolean isStill = true;
 //            boolean isInitialised = false;
-//            for (int iS = states.size() - STILL_SIZE; iS < states.size() && isStill; iS++) {
-//                CountState s = states.get(iS);
+//            for (int iS = elements.size() - STILL_SIZE; iS < elements.size() && isStill; iS++) {
+//                CountState s = elements.get(iS);
 //                for (int sensor = 0; sensor < s.means.length && isStill; sensor++) {
 //                    double min = s.means[sensor] - s.sd[sensor] * 2.5;
 //                    double max = s.means[sensor] + s.sd[sensor] * 2.5;
@@ -109,24 +113,23 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
     }
 
     /**
-     * Merges similar neighbouring states
+     * Merges similar neighbouring elements
      */
     public static List<CountState> compressStates(List<CountState> states, boolean fake, int depth) {
 //        double minDistance = 0.2;
-        double minDistance = getMaxStartDistance(states) / 10;
+        double minDistance = getMaxStartDistance(states) * 0.3;
 //        Log.d("my", "minDistance=" + minDistance);
-//        double minDistance = getStillBoundary(states);//computeSimilarityBoundary(states);
-//        double minDistance = 0.1;//computeSimilarityBoundary(states);
-        List<CountState> newStates = getCompressedStates(states, 0, states.size() - 1, minDistance * 3, depth);
+//        double minDistance = getStillBoundary(elements);//computeSimilarityBoundary(elements);
+//        double minDistance = 0.1;//computeSimilarityBoundary(elements);
+        List<CountState> newStates = getCompressedStates(states, 0, states.size() - 1, minDistance, depth);
         if (states.size() == 0)
             return newStates;
         newStates.add(0, states.get(0));
         newStates.add(newStates.size(), states.get(states.size() - 1));
         CountState last = newStates.get(0);
+
         for (int i = 1; i < newStates.size(); i++) {
             CountState current = newStates.get(i);
-//            current.setId(i);
-
             last.setNext(current);
             last = current;
         }
@@ -138,7 +141,7 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
         float combinedStates = 0;
         while (i < newStates.size()) {
             CountState next = newStates.get(i);
-            double distance = last.getDistance(next);
+            double distance = last.getDistance(next.means);
             if (distance > minDistance) {
                 combinedStates = 0;
                 last.setNext(next);
@@ -146,13 +149,19 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
                 i++;
             } else {
                 combinedStates++;
-                for (int s = 0; s < last.means.length; s++) {
-                    last.means[s] = last.means[s] *
-                            (combinedStates - 1f) / combinedStates + next.means[s] / combinedStates;
-                }
+//                for (int s = 0; s < last.means.length; s++) {
+//                    last.means[s] = last.means[s] *
+//                            (combinedStates - 1f) / combinedStates + next.means[s] / combinedStates;
+//                }
                 newStates.remove(i);
             }
             last.setNext(null);
+        }
+
+        CountState first = newStates.get(0);
+        last = newStates.get(newStates.size() - 1);
+        for (int j = 0; j < last.means.length; j++) {
+            first.means[j] = last.means[j] = (first.means[j] + last.means[j]) / 2;
         }
 
         if (!fake) {
@@ -162,18 +171,68 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
             while (i < newStates.size()) {
                 CountState next = newStates.get(i);
                 last.setId(id++);
-                CountState transientState = new CountState(last, next, id++);
-                last.setNext(transientState);
-                newStates.add(i++, transientState);
+                CountState l = last;
+                for (int j = 0; j < CountSettings.TRANSIENT_STATES; j++) {
+                    double p = 1. / (1 + CountSettings.TRANSIENT_STATES) * (j + 1);
+                    CountState transientState = new CountState(last, next, id++, p);
+                    l.setNext(transientState);
+                    newStates.add(i++, transientState);
+                    l = transientState;
+                }
+                l.setNext(next);
+//                    last.setNext(next);
                 last = next;
                 i++;
             }
             last.setId(id);
         }
 
+        newStates.get(0).setTime(states.get(1).getTime() - 1);
+        newStates.get(newStates.size() - 1).setTime(newStates.get(newStates.size() - 2).getTime() + 1);
+
 //        if (!fake)
-//            Log.d("my", "Compressed:" + newStates.size() + "/" + states.size());
+//            Log.d("my", "Compressed:" + newStates.size() + "/" + elements.size());
+        updateDistributions(newStates, states);
         return newStates;
+    }
+
+    private static void updateDistributions(List<CountState> states, List<CountState> values) {
+        final double[][] DEFAULT_CONV = new double[][]{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+
+        MultivariateSummaryStatistics[] stats = new MultivariateSummaryStatistics[states.size()];
+        for (int i = 0; i < stats.length; i++) {
+            CountState state = states.get(i);
+            stats[i] = new MultivariateSummaryStatistics(3, false);
+            state.setDistribution(new MultivariateNormalDistribution(state.means, DEFAULT_CONV));
+        }
+        for (CountState value : values) {
+            int bestState = -1;
+            double bestLikelihood = 0;
+            for (int i = 0; i < states.size(); i++) {
+                CountState state = states.get(i);
+                double l = state.getLikelihood(value.means);
+                if (bestState == -1 || l > bestLikelihood) {
+                    bestState = i;
+                    bestLikelihood = l;
+                }
+            }
+            stats[bestState].addValue(value.means);
+        }
+        for (int i = 0; i < stats.length - 1; i++) {
+            CountState state = states.get(i);
+//            if (stats[i].getN() <= 10) {
+//                state.setDistribution(used MultivariateNormalDistribution(stats[i].getMean(), DEFAULT_CONV));
+//            } else {
+            MultivariateNormalDistribution dist;
+//            try {
+//                dist = used MultivariateNormalDistribution(stats[i].getMean(), stats[i].getCovariance().getData());
+//            } catch (SingularMatrixException e) {
+            dist = new MultivariateNormalDistribution(state.means, DEFAULT_CONV);
+//            }
+            state.setDistribution(dist);
+            if (i == 0)
+                states.get(states.size() - 1).setDistribution(dist);
+        }
     }
 
     private static double getMaxStartDistance(List<CountState> states) {
@@ -182,7 +241,7 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
         CountState firstState = states.get(0);
         double distance = 0;
         for (int i = 1; i < states.size(); i++) {
-            distance = Math.max(distance, firstState.getDistance(states.get(i)));
+            distance = Math.max(distance, firstState.getDistance(states.get(i).means));
         }
         return distance;
     }
@@ -199,18 +258,18 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
         CountState lastState = sFrom;
         double gradient = 0;
         double interpolatedGradient = 0;
-        CountState interpolated = new CountState(new double[sFrom.means.length], new double[sFrom.means.length]);
+        double[] interpolated = new double[sFrom.means.length];
         for (int i = from + 1; i < to; i++) {
             CountState state = states.get(i);
             double percentage = (i - from) / (double) (to - from);
             for (int j = 0; j < sFrom.means.length; j++) {
-                interpolated.means[j] = sFrom.means[j] + (sTo.means[j] - sFrom.means[j]) * percentage;
+                interpolated[j] = sFrom.means[j] + (sTo.means[j] - sFrom.means[j]) * percentage;
 //                interpolated.sd[j] = sFrom.sd[j] + (sTo.sd[j] - sFrom.sd[j]) * percentage;
                 gradient += Math.abs(state.means[j] - lastState.means[j]);
 //                gradient += Math.abs(state.sd[j] - lastState.sd[j])/2;
             }
             lastState = state;
-            double distance = interpolated.getDistance(state);
+            double distance = state.getDistance(interpolated);
             if (distance > maxDistance) {
                 maxDistance = distance;
                 landmark = i;
@@ -238,7 +297,6 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
         int originalDistance = toMerge.getId() - state.getId();
         for (int i = 0; i < state.means.length; i++) {
             state.means[i] = (state.means[i] * originalDistance + toMerge.means[i]) / (originalDistance + 1);
-//            state.sd[i] = (state.sd[i] * originalDistance + toMerge.sd[i]) / (originalDistance + 1);
         }
         state.setNext(toMerge.getNext());
     }
@@ -270,11 +328,11 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
         for (int i = states.size() - 1; i >= 0 && i > states.size() - STILL_SIZE / 2; i--) {
             CountState state = states.get(i);
             for (int j = i + 1; j < states.size(); j++) {
-                maxDistance = Math.max(maxDistance, states.get(j).getDistance(state));
+                maxDistance = Math.max(maxDistance, states.get(j).getDistance(state.means));
             }
         }
         return maxDistance;
-//        return states.get(0).getDistance(states.get(states.size() - 1));
+//        return elements.get(0).getScore(elements.get(elements.size() - 1));
     }
 
     public List<CountState> getStates() {

@@ -1,6 +1,7 @@
 package com.bitflake.allcount.db;
 
 import com.bitflake.counter.algo.shared.old.CountState;
+import com.bitflake.counter.tools.CountStateHelper;
 import com.orm.SugarRecord;
 
 import java.util.List;
@@ -15,7 +16,7 @@ public class CounterEntry extends SugarRecord {
 
     public CounterEntry(String name, List<CountState> states) {
         this.name = name;
-        data = CountState.toJSON(states);
+        data = CountStateHelper.toJSON(states);
         lastUsed = System.currentTimeMillis();
     }
 
@@ -26,7 +27,7 @@ public class CounterEntry extends SugarRecord {
     }
 
     public List<CountState> getStates() {
-        return CountState.fromJSON(data);
+        return CountStateHelper.fromJSON(data);
     }
 
     public String getName() {

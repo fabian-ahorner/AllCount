@@ -1,11 +1,11 @@
 package com.bitflake.counter.algo.shared.old;
 
-import android.util.Log;
+import com.bitflake.counter.algo.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class SensorCounter implements SlidingWindow.WindowAnalyser {
+public class SensorCounter implements com.bitflake.counter.algo.shared.SlidingWindow.CountWindowAnalyser {
     public static final int PARTICLE_COUNT = 100;
 
     private List<CountState> states;
@@ -27,6 +27,10 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
     private CountState goalState;
     private CountState lastFullState;
     private CountState lastTransientState;
+
+    public SensorCounter(List<CountState> states) {
+        setStates(states);
+    }
 
     public SensorCounter() {
     }
@@ -74,7 +78,7 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
 
             for (CountState s : states) {
                 s.setMaxStateDistance(maxStateDistance);
-//                Particle p = new Particle(s);
+//                Particle p = used Particle(s);
 //                strongParticleSelector.addElement(p);
             }
             startParticle = new Particle(firstState);
@@ -103,7 +107,8 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
     }
 
     @Override
-    public void analyseWindow(CountState window) {
+    public void analyseWindow(double[] values) {
+        CountState window = new CountState(values, null);
         currentState = window;
         firstState.updateDistance(window);
         for (CountState s :
@@ -153,7 +158,8 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
 
     private void performCount() {
         count++;
-        listener.onCount(count);
+        if (listener != null)
+            listener.onCount(count);
         resetParticles();
     }
 
@@ -207,7 +213,6 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
 //            s += String.format("%5.2f", state.getDistance());
             s += state == bestState ? "x" : "_";
         }
-        Log.d("my", "Likelihoods: " + s + String.format(")%5d %5d R: %5d", reset, first, toResample));
     }
 
     private void resetParticles() {
@@ -239,7 +244,8 @@ public class SensorCounter implements SlidingWindow.WindowAnalyser {
             sIndex++;
         }
         countProgress /= particles.size() * states.size();
-        listener.onCountProgress(countProgress, state);
+        if (listener != null)
+            listener.onCountProgress(countProgress, state);
         return state;
     }
 

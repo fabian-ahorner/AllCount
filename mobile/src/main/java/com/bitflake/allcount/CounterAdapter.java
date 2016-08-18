@@ -11,6 +11,7 @@ import com.bitflake.allcount.db.CounterEntry;
 import com.bitflake.counter.algo.shared.old.CountState;
 import com.bitflake.counter.algo.shared.old.StateExtractor;
 import com.bitflake.counter.StateView;
+import com.bitflake.counter.tools.CountStateHelper;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -77,7 +78,7 @@ public class CounterAdapter extends RecyclerView.Adapter<CounterAdapter.ViewHold
         @Override
         public void onClick(View v) {
             counter.touch();
-            Intent i = CountActivity.getStartIntent(v.getContext(), CountState.toBundle(counter.getStates()), counter.getId());
+            Intent i = CountActivity.getStartIntent(v.getContext(), CountStateHelper.toBundle(counter.getStates()), counter.getId());
             v.getContext().startActivity(i);
 //            counter.delete();
         }
@@ -86,7 +87,7 @@ public class CounterAdapter extends RecyclerView.Adapter<CounterAdapter.ViewHold
         public boolean onLongClick(View v) {
             counter.touch();
             List<CountState> states = StateExtractor.compressStates(counter.getStates());
-            Intent i = CountActivity.getStartIntent(v.getContext(), CountState.toBundle(states));
+            Intent i = CountActivity.getStartIntent(v.getContext(), CountStateHelper.toBundle(states));
             v.getContext().startActivity(i);
             return true;
         }

@@ -8,6 +8,7 @@ import android.util.Log;
 import com.bitflake.counter.Constances;
 import com.bitflake.counter.algo.shared.old.CountState;
 import com.bitflake.counter.algo.shared.old.SensorCounter;
+import com.bitflake.counter.tools.CountStateHelper;
 
 import java.io.File;
 
@@ -69,7 +70,7 @@ public class CountService extends SensorService implements SensorCounter.CountLi
         statusBundle.putBoolean(DATA_IS_COUNTING, true);
         if (data.containsKey(DATA_STATES)) {
             currentStates = data.getBundle(DATA_STATES);
-            counter.setStates(CountState.fromBundles(currentStates));
+            counter.setStates(CountStateHelper.fromBundles(currentStates));
         }
         window.resetWindow();
         counter.reset();
@@ -103,7 +104,7 @@ public class CountService extends SensorService implements SensorCounter.CountLi
         i.putExtra(DATA_COUNT_PROGRESS, progress);
         particleCounts = counter.getParticleCounts(particleCounts);
         i.putExtra(DATA_PARTICLE_COUNT, particleCounts);
-        i.putExtra(DATA_LAST_STATE, counter.getCurrentState().toJSON());
+        i.putExtra(DATA_LAST_STATE, CountStateHelper.toJSON(counter.getCurrentState()));
         stateScores = counter.getStateDistances(stateScores);
         i.putExtra(DATA_STATE_SCORES, stateScores);
         i.putExtra(DATA_MOST_LIKELY_STATE, mostLikelyState);

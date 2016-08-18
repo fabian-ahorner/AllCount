@@ -84,11 +84,11 @@ public class CounterVisView extends View {
             CountState state = states.get(s);
             for (int i = 0; i < sensors; i++) {
                 if (s == 0) {
-                    mins[i] = state.means[i] - state.sd[i];
-                    maxs[i] = state.means[i] + state.sd[i];
+                    mins[i] = state.means[i] ;
+                    maxs[i] = state.means[i] ;
                 } else {
-                    mins[i] = Math.min(mins[i], state.means[i] - state.sd[i]);
-                    maxs[i] = Math.max(maxs[i], state.means[i] + state.sd[i]);
+                    mins[i] = Math.min(mins[i], state.means[i] );
+                    maxs[i] = Math.max(maxs[i], state.means[i] );
                 }
             }
         }
@@ -160,13 +160,13 @@ public class CounterVisView extends View {
 
         double v1 = s1.means[sensor];
         double v2 = s2.means[sensor];
-        if (min) {
-            v1 -= s1.sd[sensor] / 2;
-            v2 -= s2.sd[sensor] / 2;
-        } else {
-            v1 += s1.sd[sensor] / 2;
-            v2 += s2.sd[sensor] / 2;
-        }
+//        if (min) {
+//            v1 -= s1.sd[sensor] / 2;
+//            v2 -= s2.sd[sensor] / 2;
+//        } else {
+//            v1 += s1.sd[sensor] / 2;
+//            v2 += s2.sd[sensor] / 2;
+//        }
 
         double ratio = angleRatio * states.size() - i1;
         double value = v1 + (v2 - v1) * ratio;

@@ -1,77 +1,106 @@
-package com.bitflake.counter.algo.shared.old;
+package com.bitflake.counter.algo.shared.used;
 
-import com.google.gson.annotations.Expose;
+import com.bitflake.counter.algo.shared.used.tools.RouletteWheel;
+import com.bitflake.counter.algo.shared.used.tools.ScoreProviders;
+import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 
 import java.util.HashSet;
 import java.util.Set;
 
 public class CountState {
-    @Expose
+    private static final double[][] DEFAULT_CONV = new double[][]{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+
+    private MultivariateNormalDistribution dist;
+    private double[][] covariance;
+    private double amp;
     public double[] means;
-//    @Expose
-//    public double[] sd;
-    @Expose
     private CountState[] next;
     private Set<CountState> previous;
-    @Expose
     private int id;
-    @Expose
     private double distanceToNext = 0;
-    @Expose
     private boolean transientState;
     private double distance;
     private int particleCount = 0;
     private int totalParticles;
     private double maxStateDistance;
     private RouletteWheel<CountState> roulette;
-    private RouletteWheel.Selector<CountState> nextSelector;
+    public RouletteWheel.Selector<CountState> nextSelector;
+    //    private double likelihood;
+//    private RouletteWheel<CountState> globalRoulette;
+    private double time;
     private double likelihood;
-    private RouletteWheel<CountState> globalRoulette;
+    private double[] values;
 
 
-    public CountState(double[] means, double[] sd, int id) {
+    public CountState(double[] means, int id) {
         this.means = means;
-//        this.sd = sd;
         this.id = id;
+        this.amp = getAmp();
+        updateMeans();
     }
 
-    public CountState(double[] means, double[] sd) {
-        this.means = means;
-//        this.sd = sd;
+    public CountState(CountState last, CountState next, int id, double p) {
+        this.means = new double[last.means.length];
+        for (int j = 0; j < last.means.length; j++) {
+            means[j] = last.means[j] + (next.means[j] - last.means[j]) * p;
+        }
+        this.amp = getAmp();
+        this.id = id;
+//        transientState = true;
+        setTime(last.getTime() + (next.getTime() + last.getTime()) / p);
+
+        setNext(next);
+        updateMeans();
+    }
+
+    public void setDistribution(MultivariateNormalDistribution dist) {
+        this.dist = dist;
+    }
+
+    private void updateMeans() {
+        for (int i = 0; i < means.length; i++) {
+            means[i] = Math.round(means[i] * CountSettings.STATE_DISCRETE_STEPS) / CountSettings.STATE_DISCRETE_STEPS;
+        }
+    }
+
+    public CountState(double[] means) {
+        this(means, 0);
     }
 
     public CountState(CountState last, CountState next, int id) {
-        this.means = new double[last.means.length];
-//        this.sd = used double[last.sd.length];
-        for (int j = 0; j < last.means.length; j++) {
-            means[j] = last.means[j] + (next.means[j] - last.means[j]) / 2;
-//            sd[j] = last.sd[j] + (next.sd[j] - last.sd[j]) / 2;
-        }
-        this.id = id;
-        transientState = true;
-        setNext(next);
+        this(last, next, id, 0.5);
     }
 
-    public double getDistance(CountState w) {
+    public double getDistance(double[] values) {
         double sim = 0;
         for (int i = 0; i < means.length; i++) {
-            sim += Math.pow((means[i] - w.means[i]), 2);
-//            sim += Math.pow(sd[i] - w.sd[i], 2);
+            sim += Math.pow((means[i] - values[i]), 2);
         }
-        return Math.sqrt(sim) / (means.length * 2);
+        return Math.sqrt(sim) / means.length;
     }
 
-    private double getSimLog(double v1, double v2) {
-        v1 += 0.01;
-        v2 += 0.01;
-        return Math.log10((2 * v1 * v2) / (v1 * v1 + v2 * v2));
+
+//    public double getScore(CountState w) {
+//        double sim = 0;
+//        for (int i = 0; i < means.length; i++) {
+//            sim += means[i] * w.means[i];
+//        }
+//        return -sim / (amp * w.amp) + 1;
+//    }
+
+    private double getAmp() {
+        double amp = 0;
+        for (int j = 0; j < means.length; j++) {
+            amp += Math.pow(means[j], 2);
+        }
+        return Math.sqrt(amp);
     }
 
     public void setNext(CountState w) {
         if (this.next == null)
             this.next = new CountState[1];
         this.next[0] = w;
-        this.distanceToNext = w == null ? 0 : getDistance(w);
+        this.distanceToNext = w == null ? 0 : getDistance(w.means);
     }
 
     public double getDistanceToNext() {
@@ -91,16 +120,17 @@ public class CountState {
     }
 
 
-    public void updateDistance(CountState w) {
+    public void updateDistance(double[] values) {
         if (next != null)
             for (int i = 0; i < next.length; i++) {
                 if (next[i] != null)
-                    next[i].updateDistance(w);
+                    next[i].updateDistance(values);
             }
-        this.distance = getDistance(w);
-//        this.likelihood = Math.min(1, getDistanceToNext() / distance);
-        if (maxStateDistance > 0)
-            this.distance /= maxStateDistance;
+//        this.likelihood = getLikelihood(values);
+        this.distance = getDistance(values);
+//        if (maxStateDistance > 0)
+//            this.distance /= maxStateDistance;
+        this.values = values;
     }
 
     public double getDistance() {
@@ -131,15 +161,6 @@ public class CountState {
         return id;
     }
 
-
-    public double getScore() {
-        return 1 / Math.pow((1 + getDistance()), 4);
-    }
-
-    public void setTotalParticles(int totalParticles) {
-        this.totalParticles = totalParticles;
-    }
-
     public void setMaxStateDistance(double maxStateDistance) {
         this.maxStateDistance = maxStateDistance;
     }
@@ -148,7 +169,8 @@ public class CountState {
         if (this.previous == null)
             this.previous = new HashSet<>();
         this.previous.add(previous);
-        distanceToNext = Math.max(distanceToNext, getDistance(previous));
+//        if (this.getNext() == null)
+            distanceToNext = Math.max(distanceToNext, getDistance(previous.means));
     }
 
     @Override
@@ -168,16 +190,16 @@ public class CountState {
     public void initRoulette() {
         roulette = new RouletteWheel<>();
         nextSelector = roulette.addScoreProvider(new ScoreProviders.NextStateProvider(this));
-        if (previous != null) {
-            for (CountState s : previous) {
-                if (s.isTransientState()) {
-                    for (CountState s2 : s.previous) {
-                        roulette.addElement(s2);
-                    }
-                }
-                roulette.addElement(s);
-            }
-        }
+//        if (previous != null) {
+//            for (CountState s : previous) {
+//                if (s.isTransientState()) {
+//                    for (CountState s2 : s.previous) {
+//                        roulette.addElement(s2);
+//                    }
+//                }
+//                roulette.addElement(s);
+//            }
+//        }
         roulette.addElement(this);
         if (hasNext()) {
             roulette.addElements(next);
@@ -189,18 +211,15 @@ public class CountState {
         }
     }
 
-    public CountState getPossibleNext() {
-//        CountState best = nextSelector.getBest();
-//        if (nextSelector.getBest().getId() > getId())
-//            return best;
+    public CountState pickNext() {
         return nextSelector.pick();
     }
 
     public void updateRoulette() {
         roulette.notifyValuesChanged();
-        if (getId() == 0)
-            globalRoulette.notifyValuesChanged();
-        this.likelihood = globalRoulette.getSelector(0).getLikelihood(this);
+//        if (getId() == 0)
+//            globalRoulette.notifyValuesChanged();
+//        this.likelihood = globalRoulette.getSelector(0).getLikelihood(this);
     }
 
     public boolean hasNext() {
@@ -217,23 +236,19 @@ public class CountState {
         return Math.min(1, getLocalDistance() / getDistance());
     }
 
-    public double getLikelihoodInSequenze() {
-        return likelihood;
-    }
-
     public boolean isTransientState() {
         return transientState;
     }
 
 
     public void setGlobalRoulette() {
-        this.globalRoulette = new RouletteWheel<>();
-        globalRoulette.addScoreProvider(ScoreProviders.STATE_STRONG);
-        setGlobalRoulette(globalRoulette);
+//        this.globalRoulette = used RouletteWheel<>();
+//        globalRoulette.addScoreProvider(ScoreProviders.STATE_STRONG);
+//        setGlobalRoulette(globalRoulette);
     }
 
     public void setGlobalRoulette(RouletteWheel<CountState> globalRoulette) {
-        this.globalRoulette = globalRoulette;
+//        this.globalRoulette = globalRoulette;
         globalRoulette.addElement(this);
         if (hasNext()) {
             for (CountState s : next) {
@@ -244,5 +259,21 @@ public class CountState {
 
     public double getLocalDistance() {
         return Math.max(1, getDistanceToNext());
+    }
+
+    public void setTime(double time) {
+        this.time = time;
+    }
+
+    public double getTime() {
+        return time;
+    }
+
+    public double getLikelihood(double[] means) {
+        return dist.density(means) / dist.density(dist.getMeans());
+    }
+
+    public double getLikelihood() {
+        return likelihood;
     }
 }

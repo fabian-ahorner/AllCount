@@ -1,10 +1,8 @@
-package com.bitflake.counter;
-
-import android.util.Log;
+package com.bitflake.counter.algo.shared.used.record;
 
 import com.bitflake.counter.algo.shared.SlidingWindow;
-import com.bitflake.counter.algo.shared.old.CountState;
-import com.bitflake.counter.algo.shared.old.ArrayValueHelper;
+import com.bitflake.counter.algo.shared.used.CountState;
+import com.bitflake.counter.algo.shared.used.tools.ArrayValueHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +27,7 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
     private double[] startMin = new double[3];
     private int finalStates;
     private double minOverlap;
+    private boolean hasRecording;
 
 
     public EventExtractor(SlidingWindow.WindowAnalyser delegate, RecordingStatusListener listener) {
@@ -45,8 +44,10 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
     }
 
     @Override
-    public void analyseWindow(double[] values) {
-        CountState state = new CountState(values, null);
+    public void analyseWindow(double[] means) {
+        CountState state = new CountState(means);
+        if (hasRecording)
+            return;
         states.add(state);
         statesObserved++;
         float stillness = isStill();
@@ -55,13 +56,15 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
             if (!isRecording) {
                 startMax = maxOfMax.getValues(startMax);
                 startMin = minOfMin.getValues(startMin);
-                listener.onIsStill(1);
-                listener.onStartRecording(startMax, startMin);
+                if (listener != null) {
+                    listener.onIsStill(1);
+                    listener.onStartRecording(startMax, startMin);
+                }
                 isRecording = true;
-//                states.clear();
+//                elements.clear();
             }
-            delegate.analyseWindow(values);
-            listener.onNewState(state);
+            delegate.analyseWindow(means);
+            if (listener != null) listener.onNewState(state);
             boolean isStartingPos = isStartingPos(state);
             if (isStartingPos && wasNotStart && hasMoved) {
                 finalStates++;
@@ -69,10 +72,10 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
                 finalStates = 0;
             }
             float shownStillness = Math.min(stillness, finalStates / (float) STILL_WINDOWS);
-            listener.onIsStill(1 - shownStillness);
+            if (listener != null) listener.onIsStill(1 - shownStillness);
 //            statesObserved = 0;
 
-            Log.d("my", String.format("Stillness: %5.3f Overlap: %5.3f wasNotStart: " + wasNotStart + " isStartingPos: " + isStartingPos + " hasMoved: " + hasMoved + " statesObserved: " + statesObserved, stillness, minOverlap));
+//            Log.d("my", String.format("Stillness: %5.3f Overlap: %5.3f wasNotStart: " + wasNotStart + " isStartingPos: " + isStartingPos + " hasMoved: " + hasMoved + " statesObserved: " + statesObserved, stillness, minOverlap));
 
             if (!isStartingPos) {
                 wasNotStart = true;
@@ -80,13 +83,14 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
             if (isStill && finalStates > STILL_WINDOWS) {
                 wasStartingPos = true;
                 states.clear();
-                listener.onFinishedRecording();
+                hasRecording = true;
+                if (listener != null) listener.onFinishedRecording();
             } else if (!hasMoved && !isStill) {
                 hasMoved = true;
                 statesObserved = 0;
             }
         } else {
-            listener.onIsStill(stillness);
+            if (listener != null) listener.onIsStill(stillness);
 //            Log.d("my", "Stillness from " + (int) (stillness * 100));
         }
     }
@@ -144,36 +148,36 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
         }
 //        Log.d("my", "Is still");
         return states.size() / (float) STILL_WINDOWS;
-//        while (states.size() > STILL_WINDOWS)
-//            states.remove(0);
+//        while (elements.size() > STILL_WINDOWS)
+//            elements.remove(0);
 //
 //        mean.clear();
 //
 //        int i;
-//        for (i = states.size() - 1; i >= 0; i--) {
-//            mean.addValues(states.get(i).means);
+//        for (i = elements.size() - 1; i >= 0; i--) {
+//            mean.addValues(elements.get(i).means);
 //        }
 //        meanValues = mean.getValues(meanValues);
 //        sd.setMean(meanValues);
-//        for (i = states.size() - 1; i >= 0; i--) {
-//            CountState s = states.get(i);
+//        for (i = elements.size() - 1; i >= 0; i--) {
+//            CountState s = elements.get(i);
 //            sd.addValues(s.means);
 //        }
 //        sdValues = sd.getValues(sdValues);
 //        double maxDevi = 0;
-//        for (i = states.size() - 1; i >= 0; i--) {
-//            CountState s = states.get(i);
+//        for (i = elements.size() - 1; i >= 0; i--) {
+//            CountState s = elements.get(i);
 //            for (int sensor = 0; sensor < meanValues.length; sensor++) {
 //                double deviation = Math.abs((s.means[sensor] - meanValues[sensor]) / sdValues[sensor]);
 //                maxDevi = Math.max(maxDevi, deviation);
 //                if (deviation > MAX_SD) {
-//                    Log.d("my", String.format("SD: %8.2f %8.2f %10.2f", (states.size() - i) / (float) STILL_WINDOWS, maxDevi, sdValues[sensor]));
-//                    return (states.size() - i) / (float) STILL_WINDOWS;
+//                    Log.d("my", String.format("SD: %8.2f %8.2f %10.2f", (elements.size() - i) / (float) STILL_WINDOWS, maxDevi, sdValues[sensor]));
+//                    return (elements.size() - i) / (float) STILL_WINDOWS;
 //                }
 //            }
 //        }
-//        Log.d("my", String.format("SD: %8.2f %8.2f ", (states.size() - i) / (float) STILL_WINDOWS, maxDevi));
-//        return 0.5f * (states.size() - i) / (float) STILL_WINDOWS;
+//        Log.d("my", String.format("SD: %8.2f %8.2f ", (elements.size() - i) / (float) STILL_WINDOWS, maxDevi));
+//        return 0.5f * (elements.size() - i) / (float) STILL_WINDOWS;
     }
 
     public CountState getLastState() {
@@ -188,5 +192,9 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
         void onNewState(CountState state);
 
         void onIsStill(float stillness);
+    }
+
+    public boolean hasRecording() {
+        return hasRecording;
     }
 }

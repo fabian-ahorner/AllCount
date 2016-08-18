@@ -23,6 +23,7 @@ import com.bitflake.counter.StateView;
 import com.bitflake.counter.services.CountConstants;
 import com.bitflake.counter.services.WearCountService;
 import com.bitflake.counter.services.CountServiceHelper;
+import com.bitflake.counter.tools.CountStateHelper;
 
 import java.io.File;
 
@@ -132,7 +133,7 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
             counterEntry = CounterEntry.findById(CounterEntry.class, stateId);
 
         if (states == null) {
-            this.states = CountState.toBundle(counterEntry.getStates());
+            this.states = CountStateHelper.toBundle(counterEntry.getStates());
         }
 
         if (counterEntry != null) {
@@ -143,7 +144,7 @@ public class CountActivity extends ServiceConnectedActivity implements CountCons
 //        StateExtractor.compressStates(tmp);
 //        states = CountState.toBundle(tmp);
 
-        patternView.setStates(CountState.fromBundles(states));
+        patternView.setStates(CountStateHelper.fromBundles(states));
         patternView.listenToCounter();
 
         countOffset = getIntent().getIntExtra(EXTRA_COUNT_OFFSET, 0);

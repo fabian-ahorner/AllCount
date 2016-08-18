@@ -6,7 +6,7 @@ import android.text.format.Formatter;
 import android.util.Log;
 
 import com.bitflake.counter.SensorProxy;
-import com.bitflake.counter.algo.shared.old.SlidingWindow;
+import com.bitflake.counter.algo.shared.SlidingWindow;
 import com.bitflake.counter.sensors.LocalAccelerationSensor;
 import com.bitflake.counter.algo.shared.old.SensorValueListener;
 

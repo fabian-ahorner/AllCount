@@ -2,7 +2,7 @@ package com.bitflake.counter.services;
 
 import android.os.PowerManager;
 
-import com.bitflake.counter.algo.shared.old.SlidingWindow;
+import com.bitflake.counter.algo.shared.SlidingWindow;
 import com.bitflake.counter.sensors.LocalAccelerationSensor;
 import com.bitflake.counter.algo.shared.old.SensorDataProvider;
 import com.bitflake.counter.algo.shared.old.SensorValueListener;

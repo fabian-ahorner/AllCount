@@ -1,7 +1,5 @@
 package com.bitflake.counter.algo.shared.old;
 
-import android.util.Log;
-
 import java.util.ArrayList;
 
 public class Particle {
@@ -98,7 +96,7 @@ public class Particle {
     }
 
     public void printPath() {
-        Log.d("my", path.toString());
+//        Log.d("my", path.toString());
     }
 
     public String toString() {
