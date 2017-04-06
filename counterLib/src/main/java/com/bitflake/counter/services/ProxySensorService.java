@@ -30,7 +30,7 @@ public class ProxySensorService extends BroadcastReceiverService implements Sens
         super.onCreate();
         sensor = new LocalAccelerationSensor(this);
         sensor.setValueListener(this);
-        startServer(7332);
+        startServer(5647);
     }
 
     public void stopListening() {

@@ -1,7 +1,5 @@
 package com.bitflake.counter.algo.shared;
 
-import com.bitflake.counter.algo.shared.old.CountState;
-
 import java.util.Arrays;
 
 public class SlidingWindow {
@@ -62,20 +60,22 @@ public class SlidingWindow {
     private void analyseWindow() {
         if (analyser != null) {
             double[] means = new double[window.length];
-//            double[] var = used double[means.length];
-//            double[] sd = used double[means.length];
-
+//            double[] var = used double[values.length];
+//            double[] sd = used double[values.length];
+            int sum = 0;
             for (int sensor = 0; sensor < window.length; sensor++) {
                 if (pos[sensor] > 0) {
                     means[sensor] = sums[sensor] / pos[sensor];
+                    sum += 1;
 //                    for (int i = 0; i < pos[sensor]; i++) {
-//                        var[sensor] += Math.pow(window[sensor][i] - means[sensor], 2);
+//                        var[sensor] += Math.pow(window[sensor][i] - values[sensor], 2);
 //                    }
 //                    var[sensor] /= pos[sensor];
 //                    sd[sensor] = Math.sqrt(var[sensor]);
                 }
             }
-            analyser.analyseWindow(means);
+            if (sum > 0)
+                analyser.analyseValues(means);
         }
         resetWindow();
     }
@@ -93,7 +93,7 @@ public class SlidingWindow {
     }
 
     public interface WindowAnalyser {
-        void analyseWindow(double[] means);
+        void analyseValues(double[] means);
     }
 
 

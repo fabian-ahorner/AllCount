@@ -1,4 +1,4 @@
-package com.bitflake.counter.algo.shared.used.record;
+package com.bitflake.counter.algo.shared.current.record;
 
 public interface SensorConstants {
     String CMD_REQUEST_UPDATE = "requestUpdate";

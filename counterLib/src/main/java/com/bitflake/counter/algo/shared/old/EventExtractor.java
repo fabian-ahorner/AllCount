@@ -1,10 +1,8 @@
-package com.bitflake.counter;
-
-import android.util.Log;
+package com.bitflake.counter.algo.shared.old;
 
 import com.bitflake.counter.algo.shared.SlidingWindow;
-import com.bitflake.counter.algo.shared.used.CountState;
-import com.bitflake.counter.algo.shared.used.tools.ArrayValueHelper;
+import com.bitflake.counter.algo.shared.current.CountState;
+import com.bitflake.counter.algo.shared.current.tools.ArrayValueHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +43,7 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
     }
 
     @Override
-    public void analyseWindow(double[] values) {
+    public void analyseValues(double[] values) {
         CountState state = new CountState(values);
         states.add(state);
         statesObserved++;
@@ -60,7 +58,7 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
                 isRecording = true;
 //                states.clear();
             }
-            delegate.analyseWindow(values);
+            delegate.analyseValues(values);
             listener.onNewState(state);
             boolean isStartingPos = isStartingPos(state);
             if (isStartingPos && wasNotStart && hasMoved) {
@@ -71,8 +69,6 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
             float shownStillness = Math.min(stillness, finalStates / (float) STILL_WINDOWS);
             listener.onIsStill(1 - shownStillness);
 //            statesObserved = 0;
-
-            Log.d("my", String.format("Stillness: %5.3f Overlap: %5.3f wasNotStart: " + wasNotStart + " isStartingPos: " + isStartingPos + " hasMoved: " + hasMoved + " statesObserved: " + statesObserved, stillness, minOverlap));
 
             if (!isStartingPos) {
                 wasNotStart = true;
@@ -92,12 +88,12 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
     }
 
     private boolean isStartingPos(CountState s) {
-        for (int sensor = 0; sensor < s.means.length; sensor++) {
-            double m = s.means[sensor];
+        for (int sensor = 0; sensor < s.values.length; sensor++) {
+            double m = s.values[sensor];
             double d = (startMax[sensor] - startMin[sensor]) / 2;
             double mean = startMax[sensor] - d;
 
-            if (Math.abs(m - mean) / d > 4) {
+            if (Math.abs(m - mean) / d > .4) {
                 return false;
             }
         }
@@ -120,8 +116,8 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
         minOverlap = Double.MAX_VALUE;
         for (int i = 0; i < states.size(); i++) {
             CountState state = states.get(states.size() - 1 - i);
-            min.addValues(state.means);
-            max.addValues(state.means);
+            min.addValues(state.values);
+            max.addValues(state.values);
             if ((i + 1) % 3 == 0) {
                 minOfMax.addValues(max);
                 maxOfMax.addValues(max);
@@ -151,20 +147,20 @@ public class EventExtractor implements SlidingWindow.WindowAnalyser {
 //
 //        int i;
 //        for (i = states.size() - 1; i >= 0; i--) {
-//            mean.addValues(states.get(i).means);
+//            mean.addValues(states.get(i).values);
 //        }
 //        meanValues = mean.getValues(meanValues);
 //        sd.setMean(meanValues);
 //        for (i = states.size() - 1; i >= 0; i--) {
 //            CountState s = states.get(i);
-//            sd.addValues(s.means);
+//            sd.addValues(s.values);
 //        }
 //        sdValues = sd.getValues(sdValues);
 //        double maxDevi = 0;
 //        for (i = states.size() - 1; i >= 0; i--) {
 //            CountState s = states.get(i);
 //            for (int sensor = 0; sensor < meanValues.length; sensor++) {
-//                double deviation = Math.abs((s.means[sensor] - meanValues[sensor]) / sdValues[sensor]);
+//                double deviation = Math.abs((s.values[sensor] - meanValues[sensor]) / sdValues[sensor]);
 //                maxDevi = Math.max(maxDevi, deviation);
 //                if (deviation > MAX_SD) {
 //                    Log.d("my", String.format("SD: %8.2f %8.2f %10.2f", (states.size() - i) / (float) STILL_WINDOWS, maxDevi, sdValues[sensor]));

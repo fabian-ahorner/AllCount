@@ -87,7 +87,7 @@ public class CountState {
         if (nextSelector != null)
             return String.valueOf(id) + " " + nextSelector.toString() + " \t" + distance;
         return String.valueOf(id);
-//        return String.format("Means: %5.2f %5.2f %5.2f  \tSD: %5.2f %5.2f %5.2f  \tSim: %5.2f", means[0], means[1], means[2], sd[0], sd[1], sd[2], distanceToNext);
+//        return String.format("Means: %5.2f %5.2f %5.2f  \tSD: %5.2f %5.2f %5.2f  \tSim: %5.2f", values[0], values[1], values[2], sd[0], sd[1], sd[2], distanceToNext);
     }
 
 

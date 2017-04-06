@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.View;
 
+import com.bitflake.counter.algo.shared.current.count.CountSettings;
 import com.bitflake.counter.services.CountConstants;
 
 public class PatternView extends View {
@@ -84,8 +85,8 @@ public class PatternView extends View {
 //            double maxParticles = 0;
             for (int i = 0; i < particleCount.length; i++) {
                 maxScore = Math.max(maxScore, stateScores[i]);
-                maxParticles = Math.max(maxParticles, particleCount[i]);
             }
+            maxParticles = CountSettings.PARTICLE_COUNT;
 
             int w = getWidth() / (particleCount.length - 1);
             int h = getHeight();
@@ -115,9 +116,9 @@ public class PatternView extends View {
             pathParticles.lineTo(getWidth(), getHeight());
             pathScores.close();
             canvas.drawPath(pathParticles, paintScore);
-//            canvas.drawPath(pathScores, paintParticles);
-//            float maxDistance = (float) (h / maxScore);
-//            canvas.drawLine(0, maxDistance, getWidth(), maxDistance, paintParticles);
+            canvas.drawPath(pathScores, paintParticles);
+            float maxDistance = (float) (h / maxScore);
+            canvas.drawLine(0, maxDistance, getWidth(), maxDistance, paintParticles);
         }
 
     }

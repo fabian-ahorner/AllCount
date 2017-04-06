@@ -13,9 +13,8 @@ public class MainApplication extends MultiDexApplication {
     public void onCreate() {
         super.onCreate();
         SugarContext.init(this);
-        CounterEntry.findById(CounterEntry.class, 1l);
-        WearConnectionManager.init(this);
-        WearManager.initialize(this);
+//        WearConnectionManager.init(this);
+//        WearManager.initialize(this);
     }
 
     @Override

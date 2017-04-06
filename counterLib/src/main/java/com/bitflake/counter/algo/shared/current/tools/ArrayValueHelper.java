@@ -1,4 +1,4 @@
-package com.bitflake.counter.algo.shared.used.tools;
+package com.bitflake.counter.algo.shared.current.tools;
 
 import java.util.Arrays;
 
@@ -37,6 +37,10 @@ public abstract class ArrayValueHelper {
             values[i] = getValue(i);
         }
         return values;
+    }
+
+    public double[] getValues() {
+        return getValues(new double[values.length]);
     }
 
     public double getValue(int i) {

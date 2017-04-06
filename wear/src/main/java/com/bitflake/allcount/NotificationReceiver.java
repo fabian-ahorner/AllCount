@@ -5,13 +5,11 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 
 import com.bitflake.counter.Constances;
 import com.bitflake.counter.services.CountConstants;
 import com.bitflake.counter.services.RecordConstants;
 import com.bitflake.counter.services.WearBroadcastProxyService;
-import com.google.android.gms.wearable.Channel;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataItem;
@@ -59,7 +57,7 @@ public class NotificationReceiver extends WearBroadcastProxyService {
 
         NotificationCompat.Builder notificationBuilder =
                 new NotificationCompat.Builder(this)
-                        .setSmallIcon(com.bitflake.counter.R.drawable.ic_media_pause)
+                        .setSmallIcon(R.drawable.ic_media_pause)
                         .setContentTitle(getString(R.string.recording))
                         .setContentText(getString(com.bitflake.counter.R.string.counting))
                         .setOngoing(true);

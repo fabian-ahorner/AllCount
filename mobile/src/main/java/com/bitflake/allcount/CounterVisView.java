@@ -12,7 +12,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewOutlineProvider;
 
-import com.bitflake.counter.algo.shared.old.CountState;
+import com.bitflake.counter.algo.shared.current.CountState;
 
 import java.util.List;
 
@@ -84,11 +84,11 @@ public class CounterVisView extends View {
             CountState state = states.get(s);
             for (int i = 0; i < sensors; i++) {
                 if (s == 0) {
-                    mins[i] = state.means[i] ;
-                    maxs[i] = state.means[i] ;
+                    mins[i] = state.values[i] ;
+                    maxs[i] = state.values[i] ;
                 } else {
-                    mins[i] = Math.min(mins[i], state.means[i] );
-                    maxs[i] = Math.max(maxs[i], state.means[i] );
+                    mins[i] = Math.min(mins[i], state.values[i] );
+                    maxs[i] = Math.max(maxs[i], state.values[i] );
                 }
             }
         }
@@ -158,8 +158,8 @@ public class CounterVisView extends View {
         CountState s1 = states.get(i1);
         CountState s2 = states.get(i2);
 
-        double v1 = s1.means[sensor];
-        double v2 = s2.means[sensor];
+        double v1 = s1.values[sensor];
+        double v2 = s2.values[sensor];
 //        if (min) {
 //            v1 -= s1.sd[sensor] / 2;
 //            v2 -= s2.sd[sensor] / 2;

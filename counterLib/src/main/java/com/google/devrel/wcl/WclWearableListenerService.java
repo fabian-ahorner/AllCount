@@ -27,7 +27,7 @@ import java.util.List;
 
 /**
  * A {@link WearableListenerService} that is started when the client application is in front.
- * WearManager uses this as a means to get a number of wear related callbacks and as
+ * WearManager uses this as a values to get a number of wear related callbacks and as
  * such, {@link WearManager} starts this service by calling {@code Context.startService()} which
  * then makes this service a long-lived service. {@link WearManager} is also responsible for
  * stopping this service; clients could call {@link WearManager#stopWearableService()} to do that or

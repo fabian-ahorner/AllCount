@@ -1,4 +1,4 @@
-package com.bitflake.counter.algo.shared.used.tools;
+package com.bitflake.counter.algo.shared.current.tools;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -183,8 +183,9 @@ public class RouletteWheel<T> {
         StringBuilder sb = new StringBuilder("(");
         ScoreProvider<T> scoreProvider = scoreProviders[scoreProviderIndex];
         for (int i = 0; i < elements.size(); i++) {
-            sb.append((int) (scoreProvider.getScore(elements.get(i)) * 100 / total));
-            sb.append("  ");
+            sb.append(String.format("%6.2f",scoreProvider.getScore(elements.get(i))));
+//            sb.append((int) (scoreProvider.getScore(elements.get(i)) * 100 / total));
+//            sb.append("  ");
         }
         sb.append(")");
         return sb.toString();

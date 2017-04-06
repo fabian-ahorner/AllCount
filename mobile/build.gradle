@@ -2,15 +2,18 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion '23.0.2'
+    buildToolsVersion '24.0.2'
 
     defaultConfig {
         applicationId "com.bitflake.allcount"
         minSdkVersion 15
         targetSdkVersion 23
-        versionCode 5
-        versionName "1"
+        versionCode 6
+        versionName "2"
         multiDexEnabled true
+//        jackOptions {
+//            enabled true
+//        }
     }
     buildTypes {
         release {
@@ -19,20 +22,25 @@ android {
         }
     }
     dexOptions {
-        javaMaxHeapSize "4g"
+//        javaMaxHeapSize "4g"
+        preDexLibraries = false
     }
+//    compileOptions {
+//        targetCompatibility 1.8
+//        sourceCompatibility 1.8
+//    }
 }
 repositories {
     maven { url "https://jitpack.io" }
 }
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    wearApp project(':wear')
+//    wearApp project(':wear')
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.1.1'
     compile 'com.google.android.gms:play-services:8.4.0'
     compile 'com.android.support:design:23.1.1'
     compile 'com.github.satyan:sugar:1.4'
-    compile 'com.android.support:multidex:1.0.1'
+    compile 'com.android.support:multidex:1.0.0'
     compile project(':counterLib')
 }

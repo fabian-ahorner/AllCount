@@ -40,7 +40,7 @@
         </activity>
 
         <service android:name=".MobileCountService" />
-        <service android:name="com.bitflake.counter.services.ProxySensorService" />
+        <!--<service android:name="com.bitflake.counter.services.ProxySensorService" />-->
         <service android:name=".MobileRecordService" />
         <service android:name="com.bitflake.counter.services.WearRecordService" />
         <!--<service android:name="com.bitflake.counter.services.WearCountService" />-->

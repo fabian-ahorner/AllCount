@@ -1,11 +1,12 @@
 package com.bitflake.counter.algo.shared.old;
 
-import com.bitflake.counter.algo.*;
+
+import com.bitflake.counter.algo.shared.SlidingWindow;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class SensorCounter implements com.bitflake.counter.algo.shared.SlidingWindow.CountWindowAnalyser {
+public class SensorCounter implements SlidingWindow.CountWindowAnalyser {
     public static final int PARTICLE_COUNT = 100;
 
     private List<CountState> states;
@@ -107,7 +108,7 @@ public class SensorCounter implements com.bitflake.counter.algo.shared.SlidingWi
     }
 
     @Override
-    public void analyseWindow(double[] values) {
+    public void analyseValues(double[] values) {
         CountState window = new CountState(values, null);
         currentState = window;
         firstState.updateDistance(window);

@@ -1,13 +1,13 @@
-package com.bitflake.counter.algo.shared.used;
+package com.bitflake.counter.algo.shared.current;
 
-import com.bitflake.counter.algo.shared.used.tools.RouletteWheel;
-import com.bitflake.counter.algo.shared.used.tools.ScoreProviders;
+import com.bitflake.counter.algo.shared.current.count.CounterVersion;
+import com.bitflake.counter.algo.shared.current.tools.RouletteWheel;
+import com.bitflake.counter.algo.shared.current.tools.ScoreProviders;
 import com.google.gson.annotations.Expose;
 
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class CountState {
     private static final double[][] DEFAULT_CONV = new double[][]{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
@@ -16,7 +16,7 @@ public class CountState {
     private double[][] covariance;
     private double amp;
     @Expose
-    public double[] means;
+    public final double[] values;
     @Expose
     private CountState[] next;
     private Set<CountState> previous;
@@ -35,42 +35,50 @@ public class CountState {
 //    private RouletteWheel<CountState> globalRoulette;
     private double time;
     private double likelihood;
-    private double[] values;
+    @Expose
+    public double distanceMax;
+    @Expose
+    public double distanceMean;
+    @Expose
+    public double distanceSD;
 
+    private HashMap<CounterVersion, ParticleInfo> particleMap = new HashMap<>();
+    private double[] currentValues;
 
-    public CountState(double[] means, int id) {
-        this.means = means;
+    public CountState(double[] values, int id) {
+        this.values = values;
         this.id = id;
         this.amp = getAmp();
-        updateMeans();
+        normalise();
     }
 
     public CountState(CountState last, CountState next, int id, double p) {
-        this.means = new double[last.means.length];
-        for (int j = 0; j < last.means.length; j++) {
-            means[j] = last.means[j] + (next.means[j] - last.means[j]) * p;
+        this.values = new double[last.values.length];
+        for (int j = 0; j < last.values.length; j++) {
+            values[j] = last.values[j] + (next.values[j] - last.values[j]) * p;
         }
         this.amp = getAmp();
         this.id = id;
-//        transientState = true;
+        transientState = true;
         setTime(last.getTime() + (next.getTime() + last.getTime()) / p);
 
         setNext(next);
-        updateMeans();
+        normalise();
     }
 
     public void setDistribution(MultivariateNormalDistribution dist) {
         this.dist = dist;
     }
 
-    private void updateMeans() {
-        for (int i = 0; i < means.length; i++) {
-            means[i] = Math.round(means[i] * CountSettings.STATE_DISCRETE_STEPS) / CountSettings.STATE_DISCRETE_STEPS;
+    private void normalise() {
+        double l = getAmp();
+        for (int i = 0; i < values.length; i++) {
+            values[i] /= l;
         }
     }
 
-    public CountState(double[] means) {
-        this(means, 0);
+    public CountState(double[] values) {
+        this(values, 0);
     }
 
     public CountState(CountState last, CountState next, int id) {
@@ -79,25 +87,21 @@ public class CountState {
 
     public double getDistance(double[] values) {
         double sim = 0;
-        for (int i = 0; i < means.length; i++) {
-            sim += Math.pow((means[i] - values[i]), 2);
+        for (int i = 0; i < this.values.length; i++) {
+            sim += Math.pow((this.values[i] - values[i]), 2);
         }
-        return Math.sqrt(sim) / means.length;
+        return Math.sqrt(sim) / this.values.length;
+    }
+
+    public double getDistance(CountState state) {
+        return getDistance(state.values);
     }
 
 
-//    public double getScore(CountState w) {
-//        double sim = 0;
-//        for (int i = 0; i < means.length; i++) {
-//            sim += means[i] * w.means[i];
-//        }
-//        return -sim / (amp * w.amp) + 1;
-//    }
-
     private double getAmp() {
         double amp = 0;
-        for (int j = 0; j < means.length; j++) {
-            amp += Math.pow(means[j], 2);
+        for (int j = 0; j < values.length; j++) {
+            amp += Math.pow(values[j], 2);
         }
         return Math.sqrt(amp);
     }
@@ -106,7 +110,7 @@ public class CountState {
         if (this.next == null)
             this.next = new CountState[1];
         this.next[0] = w;
-        this.distanceToNext = w == null ? 0 : getDistance(w.means);
+        this.distanceToNext = w == null ? 0 : getDistance(w.values);
     }
 
     public double getDistanceToNext() {
@@ -120,9 +124,9 @@ public class CountState {
     @Override
     public String toString() {
         if (nextSelector != null)
-            return String.valueOf(id) + " " + nextSelector.toString() + " \t" + distance;
+            return String.format("%d: \t %4.2f %4.2f %4.2f d=%4.2f", id, values[0], values[1], values[2], distance);
         return String.valueOf(id);
-//        return String.format("Means: %5.2f %5.2f %5.2f  \tSD: %5.2f %5.2f %5.2f  \tSim: %5.2f", means[0], means[1], means[2], sd[0], sd[1], sd[2], distanceToNext);
+//        return String.format("Means: %5.2f %5.2f %5.2f  \tSD: %5.2f %5.2f %5.2f  \tSim: %5.2f", values[0], values[1], values[2], sd[0], sd[1], sd[2], distanceToNext);
     }
 
 
@@ -136,20 +140,56 @@ public class CountState {
         this.distance = getDistance(values);
 //        if (maxStateDistance > 0)
 //            this.distance /= maxStateDistance;
-        this.values = values;
+        this.currentValues = values;
     }
 
     public double getDistance() {
         return distance;
     }
 
-    public void removeParticle() {
-        particleCount--;
+    public void addParticle(CounterVersion v) {
+        particleCount++;
+        if (particleMap == null)
+            particleMap = new HashMap<>();
+        ParticleInfo i = particleMap.get(v);
+        if (i == null) {
+            i = new ParticleInfo(v);
+            particleMap.put(v, i);
+        }
+        i.count++;
     }
 
-    public void addParticle() {
-        particleCount++;
+    public void removeParticle(CounterVersion v) {
+        particleCount--;
+        ParticleInfo i = particleMap.get(v);
+        if (i == null)
+            i = new ParticleInfo(v);
+        i.count--;
     }
+
+    public Collection<ParticleInfo> getParticles() {
+        if (particleMap == null)
+            particleMap = new HashMap<>();
+        return particleMap.values();
+    }
+
+    public static class ParticleInfo {
+        final CounterVersion counter;
+        private int count;
+
+        public ParticleInfo(CounterVersion v) {
+            this.counter = v;
+        }
+
+        public CounterVersion getCounterVersion() {
+            return counter;
+        }
+
+        public boolean hasParticles() {
+            return count > 0;
+        }
+    }
+
 
     public void resetParticleCount() {
         particleCount = 0;
@@ -176,7 +216,7 @@ public class CountState {
             this.previous = new HashSet<>();
         this.previous.add(previous);
 //        if (this.getNext() == null)
-        distanceToNext = Math.max(distanceToNext, getDistance(previous.means));
+        distanceToNext = Math.max(distanceToNext, getDistance(previous.values));
     }
 
     @Override
@@ -281,5 +321,13 @@ public class CountState {
 
     public double getLikelihood() {
         return likelihood;
+    }
+
+    public static double[][] toArray(List<CountState> states) {
+        double[][] values = new double[states.size()][];
+        for (int i = 0; i < states.size(); i++) {
+            values[i] = states.get(i).values;
+        }
+        return values;
     }
 }

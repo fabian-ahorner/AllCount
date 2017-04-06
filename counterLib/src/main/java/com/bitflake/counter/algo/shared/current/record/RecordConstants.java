@@ -1,4 +1,4 @@
-package com.bitflake.counter.algo.shared.used.record;
+package com.bitflake.counter.algo.shared.current.record;
 
 public interface RecordConstants extends SensorConstants {
     String INTENT_RECORD_STATUS = "com.bitflake.counter.record.status";

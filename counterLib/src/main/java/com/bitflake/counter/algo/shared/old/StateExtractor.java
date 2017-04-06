@@ -37,7 +37,7 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
     }
 
     @Override
-    public void analyseWindow(double[] values) {
+    public void analyseValues(double[] values) {
         CountState state = new CountState(values, null);
         state.setId(lastStateId++);
         states.add(state);
@@ -62,9 +62,9 @@ public class StateExtractor implements SlidingWindow.WindowAnalyser {
 //            boolean isInitialised = false;
 //            for (int iS = states.size() - STILL_SIZE; iS < states.size() && isStill; iS++) {
 //                CountState s = states.get(iS);
-//                for (int sensor = 0; sensor < s.means.length && isStill; sensor++) {
-//                    double min = s.means[sensor] - s.sd[sensor] * 2.5;
-//                    double max = s.means[sensor] + s.sd[sensor] * 2.5;
+//                for (int sensor = 0; sensor < s.values.length && isStill; sensor++) {
+//                    double min = s.values[sensor] - s.sd[sensor] * 2.5;
+//                    double max = s.values[sensor] + s.sd[sensor] * 2.5;
 //
 //                    if (isInitialised) {
 //                        minOfMin[sensor] = Math.min(minOfMin[sensor], min);

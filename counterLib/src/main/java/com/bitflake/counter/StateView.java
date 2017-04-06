@@ -14,7 +14,7 @@ import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.bitflake.counter.algo.shared.used.CountState;
+import com.bitflake.counter.algo.shared.current.CountState;
 import com.bitflake.counter.services.CountConstants;
 import com.bitflake.counter.services.RecordConstants;
 import com.bitflake.counter.algo.shared.old.ValueHelper;
@@ -75,8 +75,8 @@ public class StateView extends View {
         for (int s = 0; s < states.size(); s++) {
             CountState state = states.get(s);
             for (int i = 0; i < sensors; i++) {
-                min.addValue(state.means[i] );
-                max.addValue(state.means[i] );
+                min.addValue(state.values[i] );
+                max.addValue(state.values[i] );
             }
         }
         stateWith = 0;
@@ -179,7 +179,7 @@ public class StateView extends View {
     }
 
     public float getY(int sensor, CountState state) {
-        double value = state.means[sensor];
+        double value = state.values[sensor];
         double valueNormalised = (value - this.min.getValue()) / (max.getValue() - this.min.getValue());
 
         return getHeight() - (float) valueNormalised * getHeight();
@@ -231,8 +231,8 @@ public class StateView extends View {
             if (max.hasValue())
                 newMax.addValue(max.getValue());
             for (int i = 0; i < sensors; i++) {
-                min.addValue(state.means[i] );
-                max.addValue(state.means[i] );
+                min.addValue(state.values[i] );
+                max.addValue(state.values[i] );
             }
 //            ObjectAnimator.ofFloat(StateView.this, "min", (float) newMin.getValue()).start();
 //            ObjectAnimator.ofFloat(StateView.this, "max", (float) newMax.getValue()).start();

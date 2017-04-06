@@ -6,17 +6,20 @@ import android.os.Bundle;
 import android.os.Handler;
 
 import com.bitflake.counter.Constances;
-import com.bitflake.counter.EventExtractor;
-import com.bitflake.counter.algo.shared.used.CountState;
-import com.bitflake.counter.algo.shared.used.record.StateExtractor;
+import com.bitflake.counter.algo.shared.current.CountState;
+import com.bitflake.counter.algo.shared.current.record.EventExtractor;
+import com.bitflake.counter.algo.shared.current.record.StateCollector;
+import com.bitflake.counter.algo.shared.current.record.StateExtractor;
 import com.bitflake.counter.tools.CountStateHelper;
 
 import java.io.File;
+import java.util.List;
 
 public class RecordService extends SensorService implements RecordConstants, EventExtractor.RecordingStatusListener {
     private Handler handler = new Handler();
-    private StateExtractor stateExtractor = new StateExtractor();
-    private EventExtractor eventExtractor = new EventExtractor(stateExtractor, this);
+    //    private StateExtractor stateExtractor = new StateExtractor();
+    private StateCollector stateCollector = new StateCollector();
+    private EventExtractor eventExtractor = new EventExtractor(stateCollector, this);
     protected int status = STATUS_NONE;
     long delay;
     long duration;
@@ -38,7 +41,7 @@ public class RecordService extends SensorService implements RecordConstants, Eve
     @Override
     public void onCreate() {
         super.onCreate();
-        setAnalyser(stateExtractor);
+        setAnalyser(stateCollector);
         super.registerReceiver(new IntentFilter(INTENT_RECORD_CONTROL));
         sensor.setFile(new File(getCacheDir(), Constances.DATA_FILE_COUNT));
     }
@@ -112,7 +115,7 @@ public class RecordService extends SensorService implements RecordConstants, Eve
             return;
         states = null;
         status = STATUS_RECORDING;
-        stateExtractor.clear();
+        stateCollector.clear();
         eventExtractor.clear();
         setAnalyser(eventExtractor);
         window.resetWindow();
@@ -160,7 +163,7 @@ public class RecordService extends SensorService implements RecordConstants, Eve
     }
 
     @Override
-    public void onStartRecording(double[] startMin, double[] startMax) {
+    public void onStartRecording(double[] startingPos) {
         broadcastStatus(EVENT_START_MOVING);
     }
 
@@ -170,8 +173,8 @@ public class RecordService extends SensorService implements RecordConstants, Eve
             return;
         stopListening();
         status = STATUS_FINISHED;
-        stateExtractor.compressStates();
-        this.states = CountStateHelper.toBundle(stateExtractor.getStates());
+        List<CountState> compressedStates = StateExtractor.compressStates(stateCollector.getStates());
+        this.states = CountStateHelper.toBundle(compressedStates);
         broadcastStates();
     }
 

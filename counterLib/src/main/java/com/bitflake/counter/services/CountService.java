@@ -6,13 +6,15 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.bitflake.counter.Constances;
-import com.bitflake.counter.algo.shared.used.count.SensorCounter;
+import com.bitflake.counter.algo.shared.current.CountState;
+import com.bitflake.counter.algo.shared.current.count.CountListener;
+import com.bitflake.counter.algo.shared.current.count.RotationCollection;
 import com.bitflake.counter.tools.CountStateHelper;
 
 import java.io.File;
 
-public class CountService extends SensorService implements SensorCounter.CountListener, CountConstants {
-    private SensorCounter counter = new SensorCounter();
+public class CountService extends SensorService implements CountListener, CountConstants {
+    private RotationCollection counter = new RotationCollection();
     private Bundle statusBundle = new Bundle();
     private float[] particleCounts;
     private float[] stateScores;
@@ -70,9 +72,10 @@ public class CountService extends SensorService implements SensorCounter.CountLi
         if (data.containsKey(DATA_STATES)) {
             currentStates = data.getBundle(DATA_STATES);
             counter.setStates(CountStateHelper.fromBundles(currentStates));
+        } else {
+            counter.reset();
         }
         window.resetWindow();
-        counter.reset();
         countOffset = data.getInt(DATA_COUNT_OFFSET);
         counterId = data.getLong(DATA_STATES_ID, -1);
         statusBundle.putInt(DATA_COUNT, countOffset);
@@ -98,15 +101,15 @@ public class CountService extends SensorService implements SensorCounter.CountLi
     }
 
     @Override
-    public void onCountProgress(float progress, int mostLikelyState) {
+    public void onCountProgress(float progress) {
         Intent i = new Intent(Constances.INTENT_COUNT_PROGRESS);
         i.putExtra(DATA_COUNT_PROGRESS, progress);
         particleCounts = counter.getParticleCounts(particleCounts);
         i.putExtra(DATA_PARTICLE_COUNT, particleCounts);
-        i.putExtra(DATA_LAST_STATE, CountStateHelper.toJSON(counter.getCurrentState()));
+        i.putExtra(DATA_LAST_STATE, CountStateHelper.toJSON(new CountState(counter.getCurrentValues().toArray())));
         stateScores = counter.getStateDistances(stateScores);
         i.putExtra(DATA_STATE_SCORES, stateScores);
-        i.putExtra(DATA_MOST_LIKELY_STATE, mostLikelyState);
+        i.putExtra(DATA_MOST_LIKELY_STATE, 0);
         sendBroadcast(i);
     }
 

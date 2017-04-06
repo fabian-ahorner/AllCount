@@ -2,7 +2,7 @@ package com.bitflake.counter.tools;
 
 import android.os.Bundle;
 
-import com.bitflake.counter.algo.shared.used.CountState;
+import com.bitflake.counter.algo.shared.current.CountState;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -13,7 +13,7 @@ public class CountStateHelper {
 
     private static Bundle toBundle(CountState state) {
         Bundle b = new Bundle();
-        b.putDoubleArray("means", state.means);
+        b.putDoubleArray("values", state.values);
 //        b.putDoubleArray("sd", state.sd);
         b.putInt("id", state.getId());
         if (state.getNext() != null)
@@ -22,7 +22,7 @@ public class CountStateHelper {
     }
 
     private static CountState fromBundle(Bundle bundle) {
-        double[] means = bundle.getDoubleArray("means");
+        double[] means = bundle.getDoubleArray("values");
         int id = bundle.getInt("id");
         return new CountState(means, id);
     }

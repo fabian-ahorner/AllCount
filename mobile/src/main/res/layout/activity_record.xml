@@ -20,12 +20,12 @@
             android:background="@color/colorPrimary"
             android:visibility="invisible" />
 
-        <com.bitflake.counter.StateView
+        <View
             android:id="@+id/stillness"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_above="@+id/tStatus1"
-            android:background="@color/colorPrimary" />
+            android:background="@color/colorPrimary"
+            android:layout_above="@+id/tStatus1" />
 
         <com.bitflake.counter.StateView
             android:id="@+id/patternView"

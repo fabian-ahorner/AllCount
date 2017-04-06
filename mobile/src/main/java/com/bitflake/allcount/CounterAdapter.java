@@ -9,8 +9,8 @@ import android.widget.TextView;
 
 import com.bitflake.allcount.db.CounterEntry;
 import com.bitflake.counter.StateView;
-import com.bitflake.counter.algo.shared.used.CountState;
-import com.bitflake.counter.algo.shared.used.record.StateExtractor;
+import com.bitflake.counter.algo.shared.current.CountState;
+import com.bitflake.counter.algo.shared.current.record.StateExtractor;
 import com.bitflake.counter.tools.CountStateHelper;
 
 import java.util.Arrays;

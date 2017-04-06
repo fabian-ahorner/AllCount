@@ -36,7 +36,7 @@ public class MobileCountService extends WearCountService {
     private Notification createNotification(int count) {
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
-                        .setSmallIcon(com.bitflake.counter.R.drawable.ic_media_pause)
+                        .setSmallIcon(R.drawable.ic_media_pause)
                         .setContentTitle(String.valueOf(count))
                         .setOngoing(true)
                         .setContentText(getString(com.bitflake.counter.R.string.counting));

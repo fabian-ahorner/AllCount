@@ -1,4 +1,4 @@
-package com.bitflake.counter.algo.shared.used;
+package com.bitflake.counter.algo.shared.current;
 
 import java.io.DataOutputStream;
 import java.io.File;

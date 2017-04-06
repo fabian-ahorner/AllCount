@@ -1,6 +1,6 @@
 package com.bitflake.allcount.db;
 
-import com.bitflake.counter.algo.shared.used.CountState;
+import com.bitflake.counter.algo.shared.current.CountState;
 import com.bitflake.counter.tools.CountStateHelper;
 import com.orm.SugarRecord;
 

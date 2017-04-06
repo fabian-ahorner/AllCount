@@ -64,7 +64,7 @@ public class MainActivity extends ServiceConnectedActivity implements View.OnCli
         // specify an adapter (see also next example)
         adapter = new CounterAdapter();
         recyclerView.setAdapter(adapter);
-        startService(new Intent(this, ProxySensorService.class));
+//        startService(new Intent(this, ProxySensorService.class));
     }
 
     @Override
@@ -137,6 +137,6 @@ public class MainActivity extends ServiceConnectedActivity implements View.OnCli
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        stopService(new Intent(this, ProxySensorService.class));
+//        stopService(new Intent(this, ProxySensorService.class));
     }
 }

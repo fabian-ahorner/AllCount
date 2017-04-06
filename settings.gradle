@@ -1,1 +1,1 @@
-include ':mobile', ':wear', ':counterLib'
+include ':mobile',  ':counterLib'
